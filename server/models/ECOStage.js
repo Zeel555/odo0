@@ -9,7 +9,6 @@ const ecoStageSchema = new mongoose.Schema(
     name: {
       type: String,
       required: [true, 'Stage name is required'],
-      unique: true,
       trim: true,
     },
     order: {
@@ -24,8 +23,16 @@ const ecoStageSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Company',
+      required: true,
+    },
   },
   { timestamps: true }
 );
+
+// Stage names must be unique within a company
+ecoStageSchema.index({ name: 1, companyId: 1 }, { unique: true });
 
 module.exports = mongoose.model('ECOStage', ecoStageSchema);

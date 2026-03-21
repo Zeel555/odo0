@@ -1,84 +1,44 @@
-import { ROLES, MODULES } from './constants';
-
 /**
- * Centralized role-based access guard.
- * All UI permission checks MUST use these functions — never inline string comparisons.
+ * roleGuard.js — single source of truth for all frontend RBAC.
+ * NEVER inline role strings in components — always import and use these functions.
  */
 
-/**
- * Can the user create records in the given module?
- * @param {string} role
- * @param {string} module - one of MODULES
- * @returns {boolean}
- */
-export const canCreate = (role, module) => {
-  if (role === ROLES.ADMIN) return true;
-  if (role === ROLES.OPERATIONS) return false;
-  if (role === ROLES.APPROVER) return false;
-  // engineering can create products, bom, eco
-  if (role === ROLES.ENGINEERING) {
-    return [MODULES.PRODUCTS, MODULES.BOM, MODULES.ECO].includes(module);
-  }
+// ─── Role predicates ─────────────────────────────────────────
+export const isAdmin       = (role) => role === 'admin';
+export const isApprover    = (role) => role === 'approver';
+export const isEngineering = (role) => role === 'engineering';
+export const isOperations  = (role) => role === 'operations';
+
+// ─── ECO permissions ─────────────────────────────────────────
+export const canCreateECO   = (role) => ['engineering', 'admin'].includes(role);
+export const canEditECO     = (role) => ['engineering', 'admin'].includes(role);
+export const canValidateECO = (role) => ['engineering', 'admin'].includes(role);
+export const canApproveECO  = (role) => ['approver', 'admin'].includes(role);
+export const canApplyECO    = (role) => role === 'admin';
+
+// ─── Product permissions ──────────────────────────────────────
+export const canCreateProduct  = (role) => ['engineering', 'admin'].includes(role);
+export const canEditProduct    = (role) => ['engineering', 'admin'].includes(role);
+export const canArchiveProduct = (role) => role === 'admin';
+
+// ─── BOM permissions ─────────────────────────────────────────
+export const canCreateBOM = (role) => ['engineering', 'admin'].includes(role);
+export const canEditBOM   = (role) => ['engineering', 'admin'].includes(role);
+
+// ─── Page/section visibility ──────────────────────────────────
+export const canViewSettings  = (role) => role === 'admin';
+export const canViewReports   = (role) => ['engineering', 'approver', 'admin'].includes(role);
+export const canViewECO       = (role) => true; // all roles can view ECOs
+export const canConfigStages  = (role) => ['approver', 'admin'].includes(role);
+
+// ─── Legacy aliases (keep for existing code that uses these) ──
+export const canCreate  = (role, module) => {
+  if (role === 'admin') return true;
+  if (role === 'engineering') return ['products', 'bom', 'eco'].includes(module);
   return false;
 };
-
-/**
- * Can the user edit records in the given module?
- * @param {string} role
- * @param {string} module
- * @returns {boolean}
- */
-export const canEdit = (role, module) => {
-  if (role === ROLES.ADMIN) return true;
-  if (role === ROLES.OPERATIONS || role === ROLES.APPROVER) return false;
-  if (role === ROLES.ENGINEERING) {
-    return [MODULES.PRODUCTS, MODULES.BOM, MODULES.ECO].includes(module);
-  }
-  return false;
-};
-
-/**
- * Can the user approve ECOs?
- * @param {string} role
- * @returns {boolean}
- */
-export const canApprove = (role) => {
-  return role === ROLES.APPROVER || role === ROLES.ADMIN;
-};
-
-/**
- * Can the user validate (move ECO to next stage)?
- * @param {string} role
- * @returns {boolean}
- */
-export const canValidate = (role) => {
-  return role === ROLES.ENGINEERING || role === ROLES.ADMIN;
-};
-
-/**
- * Can the user see the Settings page?
- * @param {string} role
- * @returns {boolean}
- */
-export const canManageSettings = (role) => role === ROLES.ADMIN;
-
-/**
- * Can the user see Reports?
- * @param {string} role
- * @returns {boolean}
- */
-export const canViewReports = (role) => role !== ROLES.OPERATIONS;
-
-/**
- * Can the user see ECOs?
- * @param {string} role
- * @returns {boolean}
- */
-export const canViewECO = (role) => role !== ROLES.OPERATIONS;
-
-/**
- * Can the user archive (delete) records?
- * @param {string} role
- * @returns {boolean}
- */
-export const canArchive = (role) => role === ROLES.ADMIN;
+export const canEdit    = (role, module) => canCreate(role, module);
+export const canApprove = (role) => canApproveECO(role);
+export const canValidate = (role) => canValidateECO(role);
+export const canManageSettings = canViewSettings;
+export const canArchive = (role) => canArchiveProduct(role);

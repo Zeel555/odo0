@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { canViewECO, canViewReports, canManageSettings } from '../../utils/roleGuard';
+import { canViewECO, canViewReports, canManageSettings, canViewSettings } from '../../utils/roleGuard';
 
 const NAV_SECTIONS = [
   {
@@ -21,13 +21,19 @@ const NAV_SECTIONS = [
     items: [
       { label: 'Change Orders', to: '/eco', icon: ECOIcon, guard: canViewECO },
       { label: 'Reports', to: '/reports', icon: ReportIcon, guard: canViewReports },
+    ],
+  },
+  {
+    label: 'Admin',
+    items: [
+      { label: 'Members', to: '/members', icon: MembersIcon, guard: canViewSettings },
       { label: 'Settings', to: '/settings', icon: SettingsIcon, guard: canManageSettings },
     ],
   },
 ];
 
 const Sidebar = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, currentCompany } = useAuth();
   const role = currentUser?.role;
   const initials = (currentUser?.name || 'U').charAt(0).toUpperCase();
 
@@ -56,7 +62,9 @@ const Sidebar = () => {
           {/* Brand text */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ fontSize: 14, fontWeight: 600, color: '#03045E', margin: 0, lineHeight: 1.2 }}>RevoraX</p>
-            <p style={{ fontSize: 10, color: '#90E0EF', margin: 0, marginTop: 1 }}>Lifecycle Manager</p>
+            <p style={{ fontSize: 10, color: '#90E0EF', margin: 0, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {currentCompany?.name || 'Lifecycle Manager'}
+            </p>
           </div>
           {/* Live dot */}
           <div className="live-dot" style={{
@@ -170,6 +178,12 @@ function ReportIcon({ color = 'currentColor' }) {
   return <svg {...iconProps} viewBox="0 0 16 16" stroke={color}>
     <path d="M2 12l3-4 3 2 3-5 3 3"/>
     <rect x="1" y="1" width="14" height="14" rx="2"/>
+  </svg>;
+}
+function MembersIcon({ color = 'currentColor' }) {
+  return <svg {...iconProps} viewBox="0 0 16 16" stroke={color}>
+    <circle cx="5" cy="5" r="3"/><path d="M1 13c0-2.2 1.8-4 4-4s4 1.8 4 4"/>
+    <circle cx="11.5" cy="5" r="2"/><path d="M14 13c0-1.7-1.1-3-2.5-3"/>
   </svg>;
 }
 function SettingsIcon({ color = 'currentColor' }) {

@@ -1,38 +1,43 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useProducts } from '../../hooks/useProducts';
+import { useAuth } from '../../context/AuthContext';
 import { StatusBadge } from '../common/Badge';
 import Button from '../common/Button';
 import { formatDate } from '../../utils/formatDate';
+import { canEditProduct, canArchiveProduct } from '../../utils/roleGuard';
 
-/**
- * ProductDetail — shows a product's full info and link to version history.
- */
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { selectedProduct: product, loading, fetchProductById } = useProducts();
+  const { selectedProduct: product, loading, fetchProductById, archiveProduct } = useProducts();
+  const { currentUser } = useAuth();
+  const role = currentUser?.role;
 
   useEffect(() => { fetchProductById(id); }, [id]);
 
-  if (loading) return <div className="h-40 flex items-center justify-center text-gray-400">Loading…</div>;
-  if (!product) return <div className="text-red-500 p-4">Product not found</div>;
+  const handleArchive = async () => {
+    if (!window.confirm('Archive this product?')) return;
+    await archiveProduct(id);
+    navigate('/products');
+  };
+
+  if (loading) return <div style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#90E0EF', fontSize: 13 }}>Loading…</div>;
+  if (!product) return <div style={{ color: '#A32D2D', padding: 16, fontSize: 13 }}>Product not found</div>;
 
   return (
-    <div className="max-w-2xl space-y-6">
-      {/* Back */}
-      <div className="flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-gray-600 text-lg">←</button>
-        <h2 className="text-lg font-semibold text-gray-900">{product.name}</h2>
+    <div className="page-content" style={{ maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#90E0EF' }}>←</button>
+        <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#03045E', flex: 1 }}>{product.name}</h2>
         <StatusBadge status={product.status} />
       </div>
 
-      {/* Card */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Version">
-            <span className="font-mono text-indigo-600 font-semibold">{product.version}</span>
-          </Field>
+      {/* Info Card */}
+      <div style={{ background: '#FFFFFF', border: '1.5px solid #90E0EF', borderRadius: 12, padding: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 20px' }}>
+          <Field label="Version"><span style={{ fontFamily: 'monospace', color: '#0077B6', fontWeight: 600 }}>{product.version}</span></Field>
           <Field label="Status"><StatusBadge status={product.status} /></Field>
           <Field label="Sale Price">${product.salePrice?.toLocaleString()}</Field>
           <Field label="Cost Price">${product.costPrice?.toLocaleString()}</Field>
@@ -41,25 +46,33 @@ const ProductDetail = () => {
         </div>
 
         {product.attachments?.length > 0 && (
-          <div>
-            <p className="text-xs font-medium text-gray-500 mb-1">Attachments</p>
-            <div className="flex flex-wrap gap-2">
+          <div style={{ marginTop: 14 }}>
+            <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 500, color: '#90E0EF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Attachments</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {product.attachments.map((a, i) => (
-                <span key={i} className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">📎 {a}</span>
+                <span key={i} style={{ background: '#EAF6FB', color: '#0077B6', fontSize: 11, padding: '2px 8px', borderRadius: 6, border: '1px solid #90E0EF' }}>📎 {a}</span>
               ))}
             </div>
           </div>
         )}
       </div>
 
-      {/* Actions */}
-      <div className="flex gap-3">
-        <Link to={`/products/${id}/history`}>
+      {/* Actions — role-based */}
+      <div style={{ display: 'flex', gap: 10 }}>
+        {/* Version History: all roles */}
+        <Link to={`/products/${id}/history`} style={{ textDecoration: 'none' }}>
           <Button variant="secondary">📜 Version History</Button>
         </Link>
-        <Link to={`/products/${id}/edit`}>
-          <Button variant="secondary">✏️ Edit</Button>
-        </Link>
+        {/* Edit: engineering + admin */}
+        {canEditProduct(role) && (
+          <Link to={`/products/${id}/edit`} style={{ textDecoration: 'none' }}>
+            <Button variant="secondary">✏️ Edit</Button>
+          </Link>
+        )}
+        {/* Archive: admin only */}
+        {canArchiveProduct(role) && product.status === 'Active' && (
+          <Button variant="danger" onClick={handleArchive}>Archive</Button>
+        )}
       </div>
     </div>
   );
@@ -67,8 +80,8 @@ const ProductDetail = () => {
 
 const Field = ({ label, children }) => (
   <div>
-    <p className="text-xs font-medium text-gray-500 mb-0.5">{label}</p>
-    <p className="text-sm text-gray-900">{children}</p>
+    <p style={{ margin: '0 0 3px', fontSize: 11, fontWeight: 500, color: '#90E0EF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
+    <div style={{ fontSize: 13, color: '#03045E' }}>{children}</div>
   </div>
 );
 

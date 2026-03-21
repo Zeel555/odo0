@@ -57,11 +57,15 @@ const bomSchema = new mongoose.Schema(
       enum: Object.values(STATUS_VALUES),
       default: STATUS_VALUES.ACTIVE,
     },
-    /** Reference to first BOM version for this product — used for BOM history. */
     rootBOM: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'BOM',
       default: null,
+    },
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Company',
+      required: true,
     },
   },
   { timestamps: true }

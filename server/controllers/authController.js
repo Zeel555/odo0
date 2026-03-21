@@ -1,67 +1,60 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-/** Generate a signed JWT for the given user id. */
-const signToken = (id) =>
-  jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+/** Generate JWT including companyId */
+const signToken = (id, companyId) =>
+  jwt.sign({ id, companyId }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-/**
- * POST /api/auth/signup
- * Body: { name, email, password, role }
- */
-const signup = async (req, res) => {
-  const { name, email, password, role } = req.body;
-  const exists = await User.findOne({ email });
-  if (exists) return res.status(400).json({ message: 'Email already in use' });
-
-  const user = await User.create({ name, email, password, role });
-  const token = signToken(user._id);
-
-  res.status(201).json({
-    token,
-    user: { _id: user._id, name: user.name, email: user.email, role: user.role },
-  });
-};
+/** Format user for API response */
+const formatUser = (user) => ({
+  _id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  companyId: user.companyId,
+});
 
 /**
  * POST /api/auth/login
  * Body: { email, password }
+ * Finds user by email+companyId or email+null (for legacy).
+ * Since users no longer self-register, this is the main entry point after company creation.
  */
 const login = async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email });
-  if (!user || !(await user.matchPassword(password))) {
+
+  // Find user by email — could match multiple companies, pick the first active one
+  const users = await User.find({ email, isActive: { $ne: false } });
+  if (!users.length) {
     return res.status(401).json({ message: 'Invalid email or password' });
   }
-  const token = signToken(user._id);
-  res.json({
-    token,
-    user: { _id: user._id, name: user.name, email: user.email, role: user.role },
-  });
+
+  // If multiple companies share the email, match by password
+  let matched = null;
+  for (const u of users) {
+    if (await u.matchPassword(password)) { matched = u; break; }
+  }
+  if (!matched) {
+    return res.status(401).json({ message: 'Invalid email or password' });
+  }
+
+  const token = signToken(matched._id, matched.companyId);
+  res.json({ token, user: formatUser(matched) });
 };
 
 /**
  * GET /api/auth/me
- * Returns current user from token (attached by authMiddleware).
  */
 const me = async (req, res) => {
-  res.json({
-    user: {
-      _id: req.user._id,
-      name: req.user.name,
-      email: req.user.email,
-      role: req.user.role,
-    },
-  });
+  res.json({ user: formatUser(req.user) });
 };
 
 /**
- * GET /api/auth/users  (admin only)
- * Returns all users (for dropdowns).
+ * GET /api/auth/users (admin only) — returns users in same company
  */
 const getAllUsers = async (req, res) => {
-  const users = await User.find().select('-password').sort({ name: 1 });
+  const users = await User.find({ companyId: req.companyId }).select('-password').sort({ name: 1 });
   res.json(users);
 };
 
-module.exports = { signup, login, me, getAllUsers };
+module.exports = { login, me, getAllUsers };

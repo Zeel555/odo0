@@ -11,11 +11,21 @@ const bomRoutes      = require('./routes/bom');
 const ecoRoutes      = require('./routes/eco');
 const reportRoutes   = require('./routes/reports');
 const settingsRoutes = require('./routes/settings');
+const companyRoutes  = require('./routes/company');
+const memberRoutes   = require('./routes/members');
+const inviteRoutes   = require('./routes/invite');
 
 const app = express();
 
 // Middleware
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    process.env.CLIENT_URL,
+  ].filter(Boolean),
+  credentials: true,
+}));
 app.use(express.json());
 
 // Routes
@@ -25,6 +35,9 @@ app.use('/api/bom',      bomRoutes);
 app.use('/api/eco',      ecoRoutes);
 app.use('/api/reports',  reportRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/company',  companyRoutes);
+app.use('/api/members',  memberRoutes);
+app.use('/api/invite',   inviteRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));

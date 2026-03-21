@@ -5,13 +5,9 @@ import { StatusBadge, Badge } from '../common/Badge';
 import Button from '../common/Button';
 import { useECO } from '../../hooks/useECO';
 import { useAuth } from '../../context/AuthContext';
-import { canCreate } from '../../utils/roleGuard';
-import { MODULES } from '../../utils/constants';
+import { canCreateECO, canEditECO, canValidateECO, canApproveECO } from '../../utils/roleGuard';
 import { formatDate } from '../../utils/formatDate';
 
-/**
- * ECOList — table of all Engineering Change Orders.
- */
 const ECOList = () => {
   const { ecos, loading, error, fetchECOs } = useECO();
   const { currentUser } = useAuth();
@@ -20,48 +16,61 @@ const ECOList = () => {
 
   useEffect(() => { fetchECOs(); }, [fetchECOs]);
 
-  const ecoTypColor = { Product: 'blue', BoM: 'purple' };
+  const ecoTypeColor = { Product: 'teal', BoM: 'blue' };
 
-  if (loading) return <div className="h-40 flex items-center justify-center text-gray-400">Loading ECOs…</div>;
-  if (error) return <div className="text-red-500 p-4">{error}</div>;
+  if (loading) return <div style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#90E0EF', fontSize: 13 }}>Loading ECOs…</div>;
+  if (error) return <div style={{ color: '#A32D2D', padding: 16, fontSize: 13 }}>{error}</div>;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="page-content" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Engineering Change Orders</h2>
-          <p className="text-sm text-gray-500">{ecos.length} total</p>
+          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#03045E' }}>Engineering Change Orders</h2>
+          <p style={{ margin: '2px 0 0', fontSize: 12, color: '#90E0EF' }}>{ecos.length} total</p>
         </div>
-        {canCreate(role, MODULES.ECO) && (
+        {/* + New ECO: only engineering + admin */}
+        {canCreateECO(role) && (
           <Button onClick={() => navigate('/eco/new')}>+ New ECO</Button>
         )}
       </div>
 
       <Table headers={['Title', 'Type', 'Product', 'Stage', 'Status', 'Created By', 'Date', 'Actions']}>
-        {ecos.map((e) => (
-          <Table.Row key={e._id} onClick={() => navigate(`/eco/${e._id}`)}>
-            <Table.Cell>
-              <span className="font-medium text-gray-900">{e.title}</span>
-            </Table.Cell>
-            <Table.Cell>
-              <Badge color={ecoTypColor[e.ecoType] || 'gray'}>{e.ecoType}</Badge>
-            </Table.Cell>
-            <Table.Cell className="text-gray-600">{e.product?.name || '—'}</Table.Cell>
-            <Table.Cell>
-              <span className="font-medium text-indigo-700">{e.stage}</span>
-            </Table.Cell>
-            <Table.Cell><StatusBadge status={e.status} /></Table.Cell>
-            <Table.Cell className="text-gray-500 text-xs">{e.user?.name || '—'}</Table.Cell>
-            <Table.Cell className="text-gray-400 text-xs">{formatDate(e.createdAt)}</Table.Cell>
-            <Table.Cell>
-              <div onClick={(e) => e.stopPropagation()}>
-                <Link to={`/eco/${e._id}`}>
-                  <Button size="sm" variant="secondary">View</Button>
-                </Link>
-              </div>
-            </Table.Cell>
-          </Table.Row>
-        ))}
+        {ecos.length === 0 ? (
+          <Table.Row><Table.Cell>No ECOs found.</Table.Cell></Table.Row>
+        ) : (
+          ecos.map((e) => {
+            // Per-row action button logic
+            const showRowValidate = canValidateECO(role) && e.status !== 'Applied';
+            const showRowApprove  = canApproveECO(role) && e.status !== 'Applied';
+            const showRowEdit     = canEditECO(role) && e.stage === 'New';
+
+            return (
+              <Table.Row key={e._id} onClick={() => navigate(`/eco/${e._id}`)}>
+                <Table.Cell><span style={{ fontWeight: 500, color: '#03045E' }}>{e.title}</span></Table.Cell>
+                <Table.Cell><Badge color={ecoTypeColor[e.ecoType] || 'gray'}>{e.ecoType}</Badge></Table.Cell>
+                <Table.Cell>{e.product?.name || '—'}</Table.Cell>
+                <Table.Cell><span style={{ fontWeight: 600, color: '#0077B6', fontSize: 12 }}>{e.stage}</span></Table.Cell>
+                <Table.Cell><StatusBadge status={e.status} /></Table.Cell>
+                <Table.Cell>{e.user?.name || '—'}</Table.Cell>
+                <Table.Cell>{formatDate(e.createdAt)}</Table.Cell>
+                <Table.Cell>
+                  <div style={{ display: 'flex', gap: 6 }} onClick={(ev) => ev.stopPropagation()}>
+                    {/* View — always shown */}
+                    <Link to={`/eco/${e._id}`} style={{ textDecoration: 'none' }}>
+                      <Button size="sm" variant="secondary">View</Button>
+                    </Link>
+                    {/* Edit — engineering + admin, only on 'New' stage */}
+                    {showRowEdit && (
+                      <Link to={`/eco/${e._id}/edit`} style={{ textDecoration: 'none' }}>
+                        <Button size="sm" variant="secondary">Edit</Button>
+                      </Link>
+                    )}
+                  </div>
+                </Table.Cell>
+              </Table.Row>
+            );
+          })
+        )}
       </Table>
     </div>
   );

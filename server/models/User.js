@@ -3,7 +3,8 @@ const bcrypt = require('bcryptjs');
 const { ROLES } = require('../config/constants');
 
 /**
- * User model — stores auth credentials and role assignment.
+ * User model — now scoped to a company.
+ * email is unique per company (compound index).
  */
 const userSchema = new mongoose.Schema(
   {
@@ -15,7 +16,6 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: [true, 'Email is required'],
-      unique: true,
       lowercase: true,
       trim: true,
     },
@@ -29,9 +29,21 @@ const userSchema = new mongoose.Schema(
       enum: Object.values(ROLES),
       required: [true, 'Role is required'],
     },
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Company',
+      default: null, // null for legacy / pre-company data
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );
+
+// Unique email per company (allows same email across different companies)
+userSchema.index({ email: 1, companyId: 1 }, { unique: true, sparse: true });
 
 /** Hash password before saving. */
 userSchema.pre('save', async function () {

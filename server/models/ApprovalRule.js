@@ -17,6 +17,11 @@ const approvalRuleSchema = new mongoose.Schema(
       enum: Object.values(ROLES),
       required: [true, 'Approver role is required'],
     },
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Company',
+      required: true,
+    },
   },
   { timestamps: true }
 );

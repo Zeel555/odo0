@@ -6,7 +6,7 @@ import { getBOMs } from '../api/bom';
 import { getECOs } from '../api/eco';
 import { StatusBadge } from '../components/common/Badge';
 import { formatDate } from '../utils/formatDate';
-import { canCreate, canViewECO } from '../utils/roleGuard';
+import { canCreateECO, canCreateProduct, canCreateBOM, canViewECO, isOperations } from '../utils/roleGuard';
 import { MODULES, ECO_TYPES } from '../utils/constants';
 
 const Dashboard = () => {
@@ -64,6 +64,17 @@ const Dashboard = () => {
         </p>
       </div>
 
+      {/* Operations read-only banner */}
+      {isOperations(role) && (
+        <div style={{
+          background: '#EAF6FB', border: '1px solid #90E0EF',
+          borderRadius: 8, padding: '10px 16px',
+          fontSize: 12, color: '#0077B6',
+        }}>
+          You are viewing in read-only mode. Only active products and BOMs are visible.
+        </div>
+      )}
+
       {/* Stat Cards */}
       {loading ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14 }}>
@@ -118,7 +129,7 @@ const Dashboard = () => {
               padding: '32px 20px', textAlign: 'center', fontSize: 13, color: '#90E0EF',
             }}>
               No ECOs yet.{' '}
-              {canCreate(role, MODULES.ECO) && (
+              {canCreateECO(role) && (
                 <Link to="/eco/new" style={{ color: '#0077B6' }}>Create one →</Link>
               )}
             </div>
@@ -161,17 +172,17 @@ const Dashboard = () => {
       <div>
         <h3 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 600, color: '#03045E' }}>Quick Actions</h3>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-          {canCreate(role, MODULES.PRODUCTS) && (
+          {canCreateProduct(role) && (
             <Link to="/products/new" className="btn-outline btn-sm" style={{ textDecoration: 'none' }}>
               + New Product
             </Link>
           )}
-          {canCreate(role, MODULES.BOM) && (
+          {canCreateBOM(role) && (
             <Link to="/bom/new" className="btn-outline btn-sm" style={{ textDecoration: 'none' }}>
               + New BOM
             </Link>
           )}
-          {canCreate(role, MODULES.ECO) && (
+          {canCreateECO(role) && (
             <Link to="/eco/new" className="btn-primary btn-sm" style={{ textDecoration: 'none' }}>
               + New ECO
             </Link>

@@ -8,12 +8,11 @@ import Button from '../common/Button';
 import ECOStageBar from './ECOStageBar';
 import ECODiff from './ECODiff';
 import { formatDate } from '../../utils/formatDate';
-import { canValidate, canApprove } from '../../utils/roleGuard';
+import {
+  canValidateECO, canApproveECO, canApplyECO, canEditECO, isOperations,
+} from '../../utils/roleGuard';
 import { ECO_TYPES, ECO_STATUS } from '../../utils/constants';
 
-/**
- * ECODetail — full ECO view with stage bar, action buttons, and diff view.
- */
 const ECODetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -26,6 +25,8 @@ const ECODetail = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState('');
 
+  const role = currentUser?.role;
+
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -33,18 +34,22 @@ const ECODetail = () => {
         const [ecoData, stagesRes] = await Promise.all([fetchECOById(id), getStages()]);
         setEco(ecoData);
         setStages(stagesRes.data || []);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
+      } catch (e) { console.error(e); }
+      finally { setLoading(false); }
     };
     load();
   }, [id]);
 
   const currentStageObj = stages.find((s) => s.name === eco?.stage);
-  const role = currentUser?.role;
   const isApplied = eco?.status === ECO_STATUS.APPLIED;
+  const isFirstStage = eco && stages.length > 0 && eco.stage === stages[0]?.name;
+
+  // Per-role action visibility
+  const showValidate = !isApplied && currentStageObj && !currentStageObj.requiresApproval && !currentStageObj.isFinal && canValidateECO(role);
+  const showApprove  = !isApplied && currentStageObj?.requiresApproval && canApproveECO(role);
+  const showApply    = !isApplied && currentStageObj?.isFinal && canApplyECO(role);
+  const showEdit     = !isApplied && isFirstStage && canEditECO(role);
+  const opsReadOnly  = isOperations(role);
 
   const handleAction = async (action) => {
     setActionError('');
@@ -56,7 +61,6 @@ const ECODetail = () => {
       else if (action === 'apply') result = await applyECO(id);
       const updated = result?.eco || result;
       if (updated?._id) setEco(updated);
-      // Reload to get populated nested refs
       const fresh = await fetchECOById(id);
       if (fresh) setEco(fresh);
     } catch (err) {
@@ -66,35 +70,37 @@ const ECODetail = () => {
     }
   };
 
-  if (loading) return <div className="h-40 flex items-center justify-center text-gray-400">Loading…</div>;
-  if (!eco) return <div className="text-red-500 p-4">ECO not found</div>;
+  if (loading) return <div style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#90E0EF', fontSize: 13 }}>Loading…</div>;
+  if (!eco) return <div style={{ color: '#A32D2D', padding: 16, fontSize: 13 }}>ECO not found</div>;
 
-  const showValidate = !isApplied && currentStageObj && !currentStageObj.requiresApproval && !currentStageObj.isFinal && canValidate(role);
-  const showApprove = !isApplied && currentStageObj?.requiresApproval && canApprove(role);
-  const showApply = !isApplied && currentStageObj?.isFinal && role === 'admin';
-
-  // Determine the current record for diff
   const currentRecord = eco.ecoType === ECO_TYPES.BOM ? eco.bom : eco.product;
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="page-content" style={{ maxWidth: 800, display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Header */}
-      <div className="flex items-center gap-4 flex-wrap">
-        <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-gray-600 text-lg">←</button>
-        <h2 className="text-lg font-semibold text-gray-900 flex-1">{eco.title}</h2>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#90E0EF' }}>←</button>
+        <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#03045E', flex: 1 }}>{eco.title}</h2>
         <StatusBadge status={eco.status} />
-        <Badge color={eco.ecoType === ECO_TYPES.BOM ? 'purple' : 'blue'}>{eco.ecoType}</Badge>
+        <Badge color={eco.ecoType === ECO_TYPES.BOM ? 'blue' : 'teal'}>{eco.ecoType}</Badge>
       </div>
+
+      {/* Operations read-only banner */}
+      {opsReadOnly && (
+        <div style={{ background: '#EAF6FB', border: '1px solid #90E0EF', borderRadius: 8, padding: '10px 16px', fontSize: 12, color: '#0077B6' }}>
+          You have read-only access to ECOs.
+        </div>
+      )}
 
       {/* Stage Bar */}
       <ECOStageBar stages={stages} currentStage={eco.stage} />
 
-      {/* Action buttons */}
-      {!isApplied && (
-        <div className="flex gap-3 items-center flex-wrap">
+      {/* Action buttons — hidden for operations */}
+      {!isApplied && !opsReadOnly && (
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           {showValidate && (
             <Button onClick={() => handleAction('validate')} loading={actionLoading} variant="primary">
-              ✓ Validate (Move to {stages[stages.findIndex(s=>s.name===eco.stage)+1]?.name || 'Next'})
+              ✓ Validate (Move to {stages[stages.findIndex(s => s.name === eco.stage) + 1]?.name || 'Next'})
             </Button>
           )}
           {showApprove && (
@@ -107,22 +113,22 @@ const ECODetail = () => {
               ⚡ Apply ECO
             </Button>
           )}
-          {canValidate(role) && !isApplied && (
-            <Link to={`/eco/${id}/edit`}>
+          {showEdit && (
+            <Link to={`/eco/${id}/edit`} style={{ textDecoration: 'none' }}>
               <Button variant="secondary" size="sm">✏️ Edit</Button>
             </Link>
           )}
-          {actionError && <p className="text-sm text-red-600">{actionError}</p>}
+          {actionError && <p style={{ fontSize: 12, color: '#A32D2D', margin: 0 }}>{actionError}</p>}
         </div>
       )}
 
       {/* ECO Info Card */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-        <h3 className="text-sm font-semibold text-gray-900 mb-4">ECO Details</h3>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <Field label="Product">{eco.product?.name} <span className="font-mono text-xs bg-gray-100 px-1 rounded">{eco.product?.version}</span></Field>
-          {eco.ecoType === ECO_TYPES.BOM && <Field label="BOM Version"><span className="font-mono">{eco.bom?.version || '—'}</span></Field>}
-          <Field label="Stage"><span className="text-indigo-700 font-semibold">{eco.stage}</span></Field>
+      <div style={{ background: '#FFFFFF', border: '1.5px solid #90E0EF', borderRadius: 12, padding: 20 }}>
+        <p style={{ margin: '0 0 14px', fontSize: 13, fontWeight: 600, color: '#03045E' }}>ECO Details</p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 20px' }}>
+          <Field label="Product">{eco.product?.name} <span style={{ fontFamily: 'monospace', fontSize: 11, background: '#EAF6FB', padding: '1px 6px', borderRadius: 4 }}>{eco.product?.version}</span></Field>
+          {eco.ecoType === ECO_TYPES.BOM && <Field label="BOM Version"><span style={{ fontFamily: 'monospace' }}>{eco.bom?.version || '—'}</span></Field>}
+          <Field label="Stage"><span style={{ color: '#0077B6', fontWeight: 600 }}>{eco.stage}</span></Field>
           <Field label="Status"><StatusBadge status={eco.status} /></Field>
           <Field label="Version Update">{eco.versionUpdate ? '✅ New version' : '⚠️ Patch in-place'}</Field>
           <Field label="Effective Date">{formatDate(eco.effectiveDate)}</Field>
@@ -131,14 +137,10 @@ const ECODetail = () => {
         </div>
       </div>
 
-      {/* Diff */}
+      {/* Proposed Changes Diff — always read-only for all roles here */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">Proposed Changes</h3>
-        <ECODiff
-          ecoType={eco.ecoType}
-          currentRecord={currentRecord}
-          proposedChanges={eco.proposedChanges}
-        />
+        <p style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 600, color: '#03045E' }}>Proposed Changes</p>
+        <ECODiff ecoType={eco.ecoType} currentRecord={currentRecord} proposedChanges={eco.proposedChanges} />
       </div>
     </div>
   );
@@ -146,8 +148,8 @@ const ECODetail = () => {
 
 const Field = ({ label, children }) => (
   <div>
-    <p className="text-xs font-medium text-gray-500 mb-0.5">{label}</p>
-    <p className="text-gray-900">{children}</p>
+    <p style={{ margin: '0 0 3px', fontSize: 11, fontWeight: 500, color: '#90E0EF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
+    <div style={{ fontSize: 13, color: '#03045E' }}>{children}</div>
   </div>
 );
 

@@ -7,7 +7,7 @@ const ApprovalRule = require('../models/ApprovalRule');
  * GET /api/settings/stages — list all stages in order.
  */
 const getStages = async (req, res) => {
-  const stages = await ECOStage.find().sort({ order: 1 });
+  const stages = await ECOStage.find({ companyId: req.companyId }).sort({ order: 1 });
   res.json(stages);
 };
 
@@ -17,7 +17,7 @@ const getStages = async (req, res) => {
  */
 const createStage = async (req, res) => {
   const { name, order, requiresApproval, isFinal } = req.body;
-  const stage = await ECOStage.create({ name, order, requiresApproval, isFinal });
+  const stage = await ECOStage.create({ name, order, requiresApproval, isFinal, companyId: req.companyId });
   res.status(201).json(stage);
 };
 
@@ -25,10 +25,11 @@ const createStage = async (req, res) => {
  * PUT /api/settings/stages/:id
  */
 const updateStage = async (req, res) => {
-  const stage = await ECOStage.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
+  const stage = await ECOStage.findOneAndUpdate(
+    { _id: req.params.id, companyId: req.companyId },
+    req.body,
+    { new: true, runValidators: true }
+  );
   if (!stage) return res.status(404).json({ message: 'Stage not found' });
   res.json(stage);
 };
@@ -37,7 +38,7 @@ const updateStage = async (req, res) => {
  * DELETE /api/settings/stages/:id
  */
 const deleteStage = async (req, res) => {
-  const stage = await ECOStage.findByIdAndDelete(req.params.id);
+  const stage = await ECOStage.findOneAndDelete({ _id: req.params.id, companyId: req.companyId });
   if (!stage) return res.status(404).json({ message: 'Stage not found' });
   res.json({ message: 'Stage deleted' });
 };
@@ -48,7 +49,7 @@ const deleteStage = async (req, res) => {
  * GET /api/settings/rules — list all approval rules.
  */
 const getRules = async (req, res) => {
-  const rules = await ApprovalRule.find().sort({ stage: 1 });
+  const rules = await ApprovalRule.find({ companyId: req.companyId }).sort({ stage: 1 });
   res.json(rules);
 };
 
@@ -58,7 +59,7 @@ const getRules = async (req, res) => {
  */
 const createRule = async (req, res) => {
   const { stage, approverRole } = req.body;
-  const rule = await ApprovalRule.create({ stage, approverRole });
+  const rule = await ApprovalRule.create({ stage, approverRole, companyId: req.companyId });
   res.status(201).json(rule);
 };
 
@@ -66,7 +67,7 @@ const createRule = async (req, res) => {
  * DELETE /api/settings/rules/:id
  */
 const deleteRule = async (req, res) => {
-  const rule = await ApprovalRule.findByIdAndDelete(req.params.id);
+  const rule = await ApprovalRule.findOneAndDelete({ _id: req.params.id, companyId: req.companyId });
   if (!rule) return res.status(404).json({ message: 'Rule not found' });
   res.json({ message: 'Rule deleted' });
 };

@@ -2,8 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 /**
- * Middleware: Verify JWT from Authorization header and attach user to req.
- * Usage: router.use(protect)
+ * Middleware: Verify JWT and attach user + companyId to req.
  */
 const protect = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -18,6 +17,8 @@ const protect = async (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ message: 'User not found' });
     }
+    // Attach companyId for all controllers to use
+    req.companyId = req.user.companyId;
     next();
   } catch (err) {
     return res.status(401).json({ message: 'Token invalid or expired' });

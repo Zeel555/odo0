@@ -15,7 +15,7 @@ const getStages = () => ECOStage.find().sort({ order: 1 });
  * List all ECOs with populated refs.
  */
 const getECOs = async (req, res) => {
-  const ecos = await ECO.find()
+  const ecos = await ECO.find({ companyId: req.companyId })
     .populate('product', 'name version')
     .populate('bom', 'version')
     .populate('user', 'name role')
@@ -28,7 +28,7 @@ const getECOs = async (req, res) => {
  * Single ECO with full detail.
  */
 const getECOById = async (req, res) => {
-  const eco = await ECO.findById(req.params.id)
+  const eco = await ECO.findOne({ _id: req.params.id, companyId: req.companyId })
     .populate('product')
     .populate({ path: 'bom', populate: { path: 'components.product', select: 'name version' } })
     .populate('user', 'name email role');
@@ -50,9 +50,7 @@ const createECO = async (req, res) => {
 
   const { title, ecoType, product, bom, effectiveDate, versionUpdate, proposedChanges } = req.body;
   const eco = await ECO.create({
-    title,
-    ecoType,
-    product,
+    title, ecoType, product,
     bom: bom || null,
     user: req.user._id,
     effectiveDate: effectiveDate || new Date(),
@@ -60,6 +58,7 @@ const createECO = async (req, res) => {
     stage: firstStage.name,
     proposedChanges: proposedChanges || {},
     status: ECO_STATUS.OPEN,
+    companyId: req.companyId,
   });
 
   await logAudit({
@@ -79,7 +78,7 @@ const createECO = async (req, res) => {
  * Update ECO fields while status is Open and stage is first stage.
  */
 const updateECO = async (req, res) => {
-  const eco = await ECO.findById(req.params.id);
+  const eco = await ECO.findOne({ _id: req.params.id, companyId: req.companyId });
   if (!eco) return res.status(404).json({ message: 'ECO not found' });
   if (eco.status === ECO_STATUS.APPLIED) {
     return res.status(400).json({ message: 'Cannot edit an applied ECO' });
@@ -102,7 +101,7 @@ const updateECO = async (req, res) => {
  * engineering + admin only.
  */
 const validateECO = async (req, res) => {
-  const eco = await ECO.findById(req.params.id);
+  const eco = await ECO.findOne({ _id: req.params.id, companyId: req.companyId });
   if (!eco) return res.status(404).json({ message: 'ECO not found' });
   if (eco.status === ECO_STATUS.APPLIED) {
     return res.status(400).json({ message: 'ECO already applied' });
@@ -152,7 +151,7 @@ const validateECO = async (req, res) => {
  * Approve ECO in a stage that requires approval. approver + admin only.
  */
 const approveECO = async (req, res) => {
-  const eco = await ECO.findById(req.params.id);
+  const eco = await ECO.findOne({ _id: req.params.id, companyId: req.companyId });
   if (!eco) return res.status(404).json({ message: 'ECO not found' });
   if (eco.status === ECO_STATUS.APPLIED) {
     return res.status(400).json({ message: 'ECO already applied' });
@@ -234,6 +233,7 @@ const applyECOLogic = async (eco, userId, res) => {
         status: STATUS_VALUES.ACTIVE,
         rootProduct: rootId,
         createdBy: userId,
+        companyId: eco.companyId,
       });
 
       // Archive old version
@@ -271,6 +271,7 @@ const applyECOLogic = async (eco, userId, res) => {
         version: newVersion,
         status: STATUS_VALUES.ACTIVE,
         rootBOM: rootId,
+        companyId: eco.companyId,
       });
 
       oldBOM.status = STATUS_VALUES.ARCHIVED;
@@ -306,7 +307,7 @@ const applyECOLogic = async (eco, userId, res) => {
  * Manually trigger apply (admin only or when on final stage).
  */
 const applyECO = async (req, res) => {
-  const eco = await ECO.findById(req.params.id);
+  const eco = await ECO.findOne({ _id: req.params.id, companyId: req.companyId });
   if (!eco) return res.status(404).json({ message: 'ECO not found' });
   if (eco.status === ECO_STATUS.APPLIED) {
     return res.status(400).json({ message: 'ECO already applied' });

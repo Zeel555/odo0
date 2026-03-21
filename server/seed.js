@@ -8,18 +8,32 @@ const mongoose = require('mongoose');
 const ECOStage = require('./models/ECOStage');
 const { DEFAULT_STAGES } = require('./config/constants');
 
+const Company = require('./models/Company');
+
 const seed = async () => {
   await mongoose.connect(process.env.MONGODB_URI);
   console.log('Connected to MongoDB');
 
-  const count = await ECOStage.countDocuments();
+  // Ensure there is at least a development company to attach stages to
+  let testCompany = await Company.findOne({ name: 'Development Company' });
+  if (!testCompany) {
+    testCompany = await Company.create({
+      name: 'Development Company',
+      domain: 'dev.local',
+      isActive: true,
+    });
+    console.log(`Created Development Company (${testCompany._id})`);
+  }
+
+  const count = await ECOStage.countDocuments({ companyId: testCompany._id });
   if (count > 0) {
-    console.log(`Stages already seeded (${count} found). Skipping.`);
+    console.log(`Stages already seeded for Development Company (${count} found). Skipping.`);
     process.exit(0);
   }
 
-  await ECOStage.insertMany(DEFAULT_STAGES);
-  console.log('✅ Default stages seeded:', DEFAULT_STAGES.map((s) => s.name).join(', '));
+  const stagesWithCompany = DEFAULT_STAGES.map(s => ({ ...s, companyId: testCompany._id }));
+  await ECOStage.insertMany(stagesWithCompany);
+  console.log('✅ Default stages seeded for Development Company:', DEFAULT_STAGES.map((s) => s.name).join(', '));
   process.exit(0);
 };
 

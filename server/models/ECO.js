@@ -57,6 +57,11 @@ const ecoSchema = new mongoose.Schema(
       enum: Object.values(ECO_STATUS),
       default: ECO_STATUS.OPEN,
     },
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Company',
+      required: true,
+    },
   },
   { timestamps: true }
 );
