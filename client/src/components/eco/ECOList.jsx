@@ -1,20 +1,51 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Table from '../common/Table';
 import { StatusBadge, Badge } from '../common/Badge';
 import Button from '../common/Button';
 import { useECO } from '../../hooks/useECO';
 import { useAuth } from '../../context/AuthContext';
-import { canCreateECO, canEditECO, canValidateECO, canApproveECO } from '../../utils/roleGuard';
+import {
+  canCreateECO,
+  canEditECO,
+  canValidateECO,
+  canApproveECO,
+  canRejectECO,
+  canApplyECO,
+} from '../../utils/roleGuard';
 import { formatDate } from '../../utils/formatDate';
+import { ECO_STATUS } from '../../utils/constants';
+import { getStages } from '../../api/settings';
 
 const ECOList = () => {
-  const { ecos, loading, error, fetchECOs } = useECO();
+  const { ecos, loading, error, fetchECOs, validateECO, approveECO, rejectECO, applyECO } = useECO();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const role = currentUser?.role;
+  const [stages, setStages] = useState([]);
+  const [busyId, setBusyId] = useState(null);
 
-  useEffect(() => { fetchECOs(); }, [fetchECOs]);
+  useEffect(() => {
+    fetchECOs();
+    getStages().then((r) => setStages(r.data || [])).catch(() => setStages([]));
+  }, [fetchECOs]);
+
+  const stageMeta = useCallback(
+    (name) => stages.find((s) => s.name === name),
+    [stages]
+  );
+
+  const run = async (id, fn) => {
+    setBusyId(id);
+    try {
+      await fn(id);
+      await fetchECOs();
+    } catch (e) {
+      alert(e.response?.data?.message || 'Action failed');
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   const ecoTypeColor = { Product: 'teal', BoM: 'blue' };
 
@@ -28,7 +59,6 @@ const ECOList = () => {
           <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#03045E' }}>Engineering Change Orders</h2>
           <p style={{ margin: '2px 0 0', fontSize: 12, color: '#90E0EF' }}>{ecos.length} total</p>
         </div>
-        {/* + New ECO: only engineering + admin */}
         {canCreateECO(role) && (
           <Button onClick={() => navigate('/eco/new')}>+ New ECO</Button>
         )}
@@ -39,10 +69,13 @@ const ECOList = () => {
           <Table.Row><Table.Cell>No ECOs found.</Table.Cell></Table.Row>
         ) : (
           ecos.map((e) => {
-            // Per-row action button logic
-            const showRowValidate = canValidateECO(role) && e.status !== 'Applied';
-            const showRowApprove  = canApproveECO(role) && e.status !== 'Applied';
-            const showRowEdit     = canEditECO(role) && e.stage === 'New';
+            const sm = stageMeta(e.stage);
+            const isOpen = e.status === ECO_STATUS.OPEN;
+            const showSubmit = isOpen && canValidateECO(role) && sm && !sm.requiresApproval && !sm.isFinal;
+            const showAppr = isOpen && canApproveECO(role) && sm?.requiresApproval;
+            const showApply = isOpen && canApplyECO(role) && sm?.isFinal;
+            const showEdit = canEditECO(role) && stages[0]?.name === e.stage && isOpen;
+            const b = busyId === e._id;
 
             return (
               <Table.Row key={e._id} onClick={() => navigate(`/eco/${e._id}`)}>
@@ -54,16 +87,36 @@ const ECOList = () => {
                 <Table.Cell>{e.user?.name || '—'}</Table.Cell>
                 <Table.Cell>{formatDate(e.createdAt)}</Table.Cell>
                 <Table.Cell>
-                  <div style={{ display: 'flex', gap: 6 }} onClick={(ev) => ev.stopPropagation()}>
-                    {/* View — always shown */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }} onClick={(ev) => ev.stopPropagation()}>
                     <Link to={`/eco/${e._id}`} style={{ textDecoration: 'none' }}>
                       <Button size="sm" variant="secondary">View</Button>
                     </Link>
-                    {/* Edit — engineering + admin, only on 'New' stage */}
-                    {showRowEdit && (
+                    {showEdit && (
                       <Link to={`/eco/${e._id}/edit`} style={{ textDecoration: 'none' }}>
                         <Button size="sm" variant="secondary">Edit</Button>
                       </Link>
+                    )}
+                    {showSubmit && (
+                      <Button size="sm" loading={b} onClick={() => run(e._id, () => validateECO(e._id))}>Submit</Button>
+                    )}
+                    {showAppr && (
+                      <>
+                        <Button size="sm" variant="success" loading={b} onClick={() => run(e._id, () => approveECO(e._id))}>Approve</Button>
+                        {canRejectECO(role) && (
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            loading={b}
+                            onClick={() => {
+                              const reason = window.prompt('Reject reason (optional):') ?? '';
+                              run(e._id, () => rejectECO(e._id, reason));
+                            }}
+                          >Reject</Button>
+                        )}
+                      </>
+                    )}
+                    {showApply && (
+                      <Button size="sm" loading={b} onClick={() => { if (window.confirm('Apply to master data?')) run(e._id, () => applyECO(e._id)); }}>Apply</Button>
                     )}
                   </div>
                 </Table.Cell>

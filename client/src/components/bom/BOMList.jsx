@@ -5,10 +5,10 @@ import { StatusBadge } from '../common/Badge';
 import Button from '../common/Button';
 import { useBOM } from '../../hooks/useBOM';
 import { useAuth } from '../../context/AuthContext';
-import { canCreateBOM, canEditBOM, isOperations } from '../../utils/roleGuard';
+import { canCreateBOM, canCreateECO, isAdmin, isOperations } from '../../utils/roleGuard';
 
 const BOMList = () => {
-  const { boms, loading, error, fetchBOMs } = useBOM();
+  const { boms, loading, error, fetchBOMs, archiveBOM } = useBOM();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const role = currentUser?.role;
@@ -56,8 +56,15 @@ const BOMList = () => {
                   {/* View: all roles */}
                   <Button size="sm" variant="secondary" onClick={() => navigate(`/bom/${b._id}`)}>View</Button>
                   {/* Edit: engineering + admin only */}
-                  {!opsMode && canEditBOM(role) && (
-                    <Button size="sm" variant="secondary" onClick={() => navigate(`/bom/${b._id}/edit`)}>Edit</Button>
+                  {!opsMode && canCreateECO(role) && b.status === 'Active' && (
+                    <Button size="sm" variant="secondary" onClick={() => navigate(`/eco/new?bomId=${b._id}`)}>ECO</Button>
+                  )}
+                  {!opsMode && isAdmin(role) && b.status === 'Active' && (
+                    <Button size="sm" variant="danger" onClick={async () => {
+                      if (!window.confirm('Archive this BOM?')) return;
+                      await archiveBOM(b._id);
+                      fetchBOMs();
+                    }}>Archive</Button>
                   )}
                 </div>
               </Table.Cell>

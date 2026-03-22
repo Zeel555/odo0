@@ -57,6 +57,25 @@ const ecoSchema = new mongoose.Schema(
       enum: Object.values(ECO_STATUS),
       default: ECO_STATUS.OPEN,
     },
+    /** Set when status is Rejected */
+    rejectReason: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    /** Discussion thread on this ECO */
+    comments: [
+      {
+        user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+        text: { type: String, required: true, trim: true },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+    /** Optional file URLs for ECO package (strings) */
+    attachmentUrls: {
+      type: [String],
+      default: [],
+    },
     companyId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Company',

@@ -14,16 +14,19 @@ export const canCreateECO   = (role) => ['engineering', 'admin'].includes(role);
 export const canEditECO     = (role) => ['engineering', 'admin'].includes(role);
 export const canValidateECO = (role) => ['engineering', 'admin'].includes(role);
 export const canApproveECO  = (role) => ['approver', 'admin'].includes(role);
+export const canRejectECO   = (role) => ['approver', 'admin'].includes(role);
 export const canApplyECO    = (role) => role === 'admin';
 
 // ─── Product permissions ──────────────────────────────────────
 export const canCreateProduct  = (role) => ['engineering', 'admin'].includes(role);
-export const canEditProduct    = (role) => ['engineering', 'admin'].includes(role);
+/** Master data is changed via ECO only — no direct product edit */
+export const canEditProduct    = () => false;
 export const canArchiveProduct = (role) => role === 'admin';
 
 // ─── BOM permissions ─────────────────────────────────────────
 export const canCreateBOM = (role) => ['engineering', 'admin'].includes(role);
-export const canEditBOM   = (role) => ['engineering', 'admin'].includes(role);
+/** Master data is changed via ECO only — no direct BOM edit */
+export const canEditBOM   = () => false;
 
 // ─── Page/section visibility ──────────────────────────────────
 export const canViewSettings  = (role) => role === 'admin';
@@ -37,7 +40,8 @@ export const canCreate  = (role, module) => {
   if (role === 'engineering') return ['products', 'bom', 'eco'].includes(module);
   return false;
 };
-export const canEdit    = (role, module) => canCreate(role, module);
+/** Direct master-data edit is disabled — use ECO */
+export const canEdit    = () => false;
 export const canApprove = (role) => canApproveECO(role);
 export const canValidate = (role) => canValidateECO(role);
 export const canManageSettings = canViewSettings;

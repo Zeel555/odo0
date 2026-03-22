@@ -9,6 +9,7 @@ const AuditLog = require('../models/AuditLog');
  * @param {*}      [params.oldValue]    - Previous state (optional)
  * @param {*}      [params.newValue]    - New state (optional)
  * @param {*}      params.userId        - ObjectId of the user performing the action
+ * @param {*}      [params.companyId]  - Tenant scope (recommended for all new entries)
  */
 const logAudit = async ({
   action,
@@ -17,6 +18,7 @@ const logAudit = async ({
   oldValue = null,
   newValue = null,
   userId,
+  companyId = null,
 }) => {
   try {
     await AuditLog.create({
@@ -26,6 +28,7 @@ const logAudit = async ({
       oldValue,
       newValue,
       performedBy: userId,
+      companyId,
       timestamp: new Date(),
     });
   } catch (err) {

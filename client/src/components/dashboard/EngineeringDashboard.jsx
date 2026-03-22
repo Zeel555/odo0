@@ -10,6 +10,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getECOs } from '../../api/eco';
 import { getProducts } from '../../api/products';
 import { getBOMs } from '../../api/bom';
+import { getDashboardStats } from '../../api/dashboard';
 import { StatusBadge } from '../common/Badge';
 import { formatDate } from '../../utils/formatDate';
 import { getRoleConfig } from '../../utils/roleConfig';
@@ -71,25 +72,27 @@ const EngineeringDashboard = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [ecos, setEcos] = useState([]);
-  const [stats, setStats] = useState({ draft: 0, awaitingSubmit: 0, recent: 0, products: 0, boms: 0 });
+  const [stats, setStats] = useState({ draft: 0, awaitingSubmit: 0, recent: 0, products: 0, boms: 0, rejected: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [ecoRes, prodRes, bomRes] = await Promise.all([
+        const [ecoRes, prodRes, bomRes, dashRes] = await Promise.all([
           getECOs().catch(() => ({ data: [] })),
           getProducts().catch(() => ({ data: [] })),
           getBOMs().catch(() => ({ data: [] })),
+          getDashboardStats().catch(() => ({ data: {} })),
         ]);
         const all = ecoRes.data || [];
-        const mine = all.filter(e => e.createdBy?._id === currentUser?._id || e.createdBy === currentUser?._id);
-        const now = Date.now();
+        const mine = all.filter((e) => (e.user?._id || e.user) === currentUser?._id);
+        const d = dashRes.data || {};
         setEcos(mine.slice(0, 8));
         setStats({
-          draft: mine.filter(e => e.status === 'Draft').length,
-          awaitingSubmit: mine.filter(e => e.status === 'Draft' && e.stage !== 'Approval').length,
-          recent: mine.filter(e => now - new Date(e.updatedAt).getTime() < 7 * 24 * 60 * 60 * 1000).length,
+          draft: d.openECOs ?? mine.filter((e) => e.status === 'Open').length,
+          awaitingSubmit: d.pendingApproval ?? 0,
+          recent: d.readyToApply ?? 0,
+          rejected: d.rejectedECOs ?? 0,
           products: (prodRes.data || []).length,
           boms: (bomRes.data || []).length,
         });
@@ -133,9 +136,9 @@ const EngineeringDashboard = () => {
 
       {/* Stat Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 14 }}>
-        <StatCard label="My Draft ECOs" value={stats.draft} icon="✏️" accent={cfg.accent} loading={loading} to="/eco" />
-        <StatCard label="Awaiting Submission" value={stats.awaitingSubmit} icon="📤" accent="#D97706" loading={loading} to="/eco" />
-        <StatCard label="Modified This Week" value={stats.recent} icon="🔄" accent="#059669" loading={loading} to="/eco" />
+        <StatCard label="Open ECOs" value={stats.draft} icon="✏️" accent={cfg.accent} loading={loading} to="/eco" />
+        <StatCard label="Pending approval" value={stats.awaitingSubmit} icon="📤" accent="#D97706" loading={loading} to="/eco" />
+        <StatCard label="Ready to apply" value={stats.recent} icon="⚡" accent="#059669" loading={loading} to="/eco" />
         <StatCard label="Total Products" value={stats.products} icon="📦" accent="#7C3AED" loading={loading} to="/products" />
       </div>
 

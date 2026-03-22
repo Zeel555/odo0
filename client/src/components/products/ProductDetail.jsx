@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { StatusBadge } from '../common/Badge';
 import Button from '../common/Button';
 import { formatDate } from '../../utils/formatDate';
-import { canEditProduct, canArchiveProduct } from '../../utils/roleGuard';
+import { canCreateECO, canArchiveProduct } from '../../utils/roleGuard';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -63,10 +63,9 @@ const ProductDetail = () => {
         <Link to={`/products/${id}/history`} style={{ textDecoration: 'none' }}>
           <Button variant="secondary">📜 Version History</Button>
         </Link>
-        {/* Edit: engineering + admin */}
-        {canEditProduct(role) && (
-          <Link to={`/products/${id}/edit`} style={{ textDecoration: 'none' }}>
-            <Button variant="secondary">✏️ Edit</Button>
+        {canCreateECO(role) && product.status === 'Active' && (
+          <Link to={`/eco/new?productId=${id}&ecoType=Product`} style={{ textDecoration: 'none' }}>
+            <Button variant="secondary">📋 Propose change (ECO)</Button>
           </Link>
         )}
         {/* Archive: admin only */}

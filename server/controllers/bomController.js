@@ -45,16 +45,18 @@ const createBOM = async (req, res) => {
 };
 
 const updateBOM = async (req, res) => {
-  const bom = await BOM.findOne({ _id: req.params.id, companyId: req.companyId });
-  if (!bom) return res.status(404).json({ message: 'BOM not found' });
-  if (bom.status === STATUS_VALUES.ARCHIVED) {
-    return res.status(400).json({ message: 'Cannot edit an Archived BOM' });
-  }
-  const { components, operations } = req.body;
-  if (components !== undefined) bom.components = components;
-  if (operations !== undefined) bom.operations = operations;
-  await bom.save();
-  res.json(bom);
+  return res.status(403).json({
+    message:
+      'Direct BOM edits are disabled. Propose changes through an Engineering Change Order (ECO).',
+  });
 };
 
-module.exports = { getBOMs, getBOMById, getBOMHistory, createBOM, updateBOM };
+const archiveBOM = async (req, res) => {
+  const bom = await BOM.findOne({ _id: req.params.id, companyId: req.companyId });
+  if (!bom) return res.status(404).json({ message: 'BOM not found' });
+  bom.status = STATUS_VALUES.ARCHIVED;
+  await bom.save();
+  res.json({ message: 'BOM archived', bom });
+};
+
+module.exports = { getBOMs, getBOMById, getBOMHistory, createBOM, updateBOM, archiveBOM };

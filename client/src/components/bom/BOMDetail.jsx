@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useBOM } from '../../hooks/useBOM';
+import { useAuth } from '../../context/AuthContext';
 import { StatusBadge } from '../common/Badge';
 import Button from '../common/Button';
+import { canCreateECO, isAdmin } from '../../utils/roleGuard';
 
 /**
  * BOMDetail — shows full component and operation list for a BOM.
@@ -10,9 +12,17 @@ import Button from '../common/Button';
 const BOMDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { selectedBOM: bom, loading, fetchBOMById } = useBOM();
+  const { currentUser } = useAuth();
+  const role = currentUser?.role;
+  const { selectedBOM: bom, loading, fetchBOMById, archiveBOM } = useBOM();
 
   useEffect(() => { fetchBOMById(id); }, [id]);
+
+  const handleArchive = async () => {
+    if (!window.confirm('Archive this BOM?')) return;
+    await archiveBOM(id);
+    navigate('/bom');
+  };
 
   if (loading) return <div className="h-40 flex items-center justify-center text-gray-400">Loading…</div>;
   if (!bom) return <div className="text-red-500 p-4">BOM not found</div>;
@@ -83,10 +93,15 @@ const BOMDetail = () => {
         )}
       </div>
 
-      <div className="flex gap-3">
-        <Link to={`/bom/${id}/edit`}>
-          <Button variant="secondary">✏️ Edit BOM</Button>
-        </Link>
+      <div className="flex gap-3 flex-wrap">
+        {canCreateECO(role) && bom.status === 'Active' && (
+          <Link to={`/eco/new?bomId=${id}`}>
+            <Button variant="secondary">📋 Propose change (ECO)</Button>
+          </Link>
+        )}
+        {isAdmin(role) && bom.status === 'Active' && (
+          <Button variant="danger" onClick={handleArchive}>Archive BOM</Button>
+        )}
       </div>
     </div>
   );

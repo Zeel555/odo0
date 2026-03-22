@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Sidebar from './components/common/Sidebar';
 import Topbar from './components/common/Topbar';
@@ -40,10 +40,20 @@ import ApprovalRuleManager from './components/settings/ApprovalRuleManager';
 
 import {
   canViewSettings, canViewReports,
-  canCreateProduct, canEditProduct,
-  canCreateBOM, canEditBOM,
+  canCreateProduct,
+  canCreateBOM,
   canCreateECO, canEditECO,
 } from './utils/roleGuard';
+
+/** Master data edits are ECO-only — redirect old /edit URLs to new ECO with context */
+const ProductEcoRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/eco/new?productId=${id}&ecoType=Product`} replace />;
+};
+const BOMEcoRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/eco/new?bomId=${id}`} replace />;
+};
 
 /* ──────────────────────────────────────────────────────────────
    AUTH GUARD — redirect to / (landing) if not authenticated
@@ -187,11 +197,7 @@ const App = () => (
               <ProductForm />
             </RoleGuardedRoute>
           } />
-          <Route path="/products/:id/edit" element={
-            <RoleGuardedRoute permissionFn={canEditProduct} toastMsg="You don't have permission to edit products.">
-              <ProductForm />
-            </RoleGuardedRoute>
-          } />
+          <Route path="/products/:id/edit" element={<ProductEcoRedirect />} />
         </Route>
 
         {/* BOM */}
@@ -203,11 +209,7 @@ const App = () => (
               <BOMForm />
             </RoleGuardedRoute>
           } />
-          <Route path="/bom/:id/edit" element={
-            <RoleGuardedRoute permissionFn={canEditBOM} toastMsg="You don't have permission to edit BOMs.">
-              <BOMForm />
-            </RoleGuardedRoute>
-          } />
+          <Route path="/bom/:id/edit" element={<BOMEcoRedirect />} />
         </Route>
 
         {/* ECO */}

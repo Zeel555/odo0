@@ -1,0 +1,83 @@
+What’s already in good shape
+Area	Status
+Multi-tenant + JWT + roles	Users, companies, roleGuard, route protection
+Products & BoMs	Versions, rootProduct / rootBOM, history endpoints, Active/Archived
+Operations (read-only)	Active-only lists for products/BoMs; no ECO API access for operations
+ECO core	Types Product / BoM, proposedChanges, versionUpdate, apply with version bump or in-place patch
+Stages model	ECOStage (order, requiresApproval, isFinal) + seed defaults New → Approval → Done
+Audit logging	logAudit + AUDIT_ACTIONS on create / transition / apply / version / archive
+Reports (surface)	ECO report, version matrix, BOM history, archived, active matrix, audit (API + UI tabs)
+Diff UI	ECODiff + diffUtils for product fields and BoM components
+Settings (backend)	Stages + approval rules APIs exist
+Admin	Members, dashboards, etc.
+Gaps vs the written spec (important)
+1. “No direct modification of Products / BoMs”
+Spec: All changes via ECO.
+Code: PUT /api/products/:id and PUT /api/bom/:id still let engineering + admin edit live master data anytime (productController.updateProduct, bomController.updateBOM).
+→ This is the biggest mismatch. For the hackathon story you either remove/disable those paths for changes (keep only “create initial record” if you want), or enforce ECO-only updates on the server.
+
+2. ECO workflow vs “Approve = apply”
+Spec: Draft → Review → Approval → Apply; approval before apply.
+Code: approveECO directly runs applyECOLogic (applies changes immediately). Comment even says stage/rules aren’t checked.
+→ Stages don’t really gate when apply happens; approver can apply from any stage.
+
+3. Validate / stage progression in the UI
+API: POST /api/eco/:id/validate exists.
+UI: validateECO is not wired in ECODetail / list (only approve is). So engineers can’t move “New → Approval” from the app in a visible way.
+→ Workflow is incomplete on the frontend.
+
+4. Edit ECO “draft only”
+UI: Edit link only when stage === 'New' (good).
+API: updateECO only checks status !== Applied, not stage → API can still edit after “New” if someone calls it directly.
+
+5. Reject ECO
+Spec: Approver can reject.
+Code: No reject endpoint, no rejected status on the model → missing.
+
+6. Approval rules
+Spec: Configurable rules.
+Code: ApprovalRule is imported in ecoController but not used in approve/apply → rules are UI/storage only, not enforced.
+
+7. Stage names vs brief
+Brief uses Draft / Review / Approval / Apply. You use New / Approval / Done (+ validate). That’s fine if you document the mapping; otherwise rename or add a “Review” stage for clarity.
+
+8. Settings in navigation
+Brief: Settings (admin). Your sidebar was changed to drop Settings (only Members under Admin). If the organizer checks the menu, restore Settings for admin (or a single “Admin” page with stages + rules tabs).
+
+9. Reports & audit multi-tenant safety
+reportController uses things like Product.find() / ECO.find() without companyId in several places → risk of cross-company data in reports. ECO list is correctly scoped.
+→ Tighten reports (and audit queries) with req.companyId.
+
+10. ECO stages query
+getStages() is ECOStage.find() with no companyId → wrong stages can be mixed between tenants. Should be ECOStage.find({ companyId: req.companyId }) (pass companyId into the helper).
+
+11. Audit log
+No companyId on AuditLog → harder to scope per tenant in reports (and filter safely).
+
+12. Operations & reports
+Brief: operations = products/BoMs view only. You exclude operations from ECO (good). Reports route is engineering/approver/admin only → aligned if organizers accept that ops don’t see reports.
+
+Smaller / polish gaps
+ECOList defines showRowValidate / showRowApprove but doesn’t render those buttons (only View/Edit).
+Apply route: admin-only applyECO vs approver using approve that applies — document the intended model (single approver-apply vs separate apply step).
+BoM archive: spec mentions archived BoMs; confirm you have archive parity with products if the brief expects it.
+Extra features that would strengthen the demo
+Reject ECO with reason + email/in-app notice to creator.
+Strict server rules: block PUT product/BOM except create, or only allow edits that match an open draft ECO (harder but impressive).
+Approval rules enforced: e.g. “Product price change > X needs 2 approvers” (even a simplified rule engine).
+ECO activity timeline on detail (stage changes, who approved, when).
+Export: PDF or CSV of ECO + diff snapshot for audit.
+Notifications: email when ECO moves to Approval / rejected (you already have mail infra).
+Dashboard widgets: count of open ECOs, pending approvals, recent audits.
+Attachment uploads for ECO (not only product attachment strings).
+Comments on ECO for review discussion.
+Fix tenant scoping everywhere (reports, stages, audit) — judges doing a security pass will care.
+Bottom line
+You already have a solid PLM + ECO skeleton: versioning, apply path, audit hooks, diff, roles, reports structure. To match the organizer narrative (“no uncontrolled edits, full workflow, traceability”), prioritize:
+
+ECO-only changes to master data (or clearly justify initial create-only).
+Real stage machine + Validate in UI + approve without skipping (or explicit Apply step).
+Reject + optional approval rules enforcement.
+Tenant-safe reports/stages/audit.
+Settings back in admin nav if the rubric mentions it.
+I can turn this into a checklist in-repo (e.g. docs/HACKATHON-SPEC.md) or implement specific items next—say which block you want first (workflow vs lock down PUT vs tenant fixes).

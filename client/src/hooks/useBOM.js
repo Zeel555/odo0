@@ -49,8 +49,14 @@ export const useBOM = () => {
     return res.data;
   }, []);
 
+  const archiveBOM = useCallback(async (id) => {
+    const res = await bomApi.archiveBOM(id);
+    setBoms((prev) => prev.map((b) => (b._id === id ? res.data.bom : b)));
+    return res.data;
+  }, []);
+
   return {
     boms, selectedBOM, loading, error,
-    fetchBOMs, fetchBOMById, createBOM, updateBOM,
+    fetchBOMs, fetchBOMById, createBOM, updateBOM, archiveBOM,
   };
 };

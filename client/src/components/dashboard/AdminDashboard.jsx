@@ -12,6 +12,7 @@ import { getECOs } from '../../api/eco';
 import { getProducts } from '../../api/products';
 import { getBOMs } from '../../api/bom';
 import { getMembers } from '../../api/members';
+import { getDashboardStats } from '../../api/dashboard';
 import { StatusBadge } from '../common/Badge';
 import { formatDate } from '../../utils/formatDate';
 import { getRoleConfig } from '../../utils/roleConfig';
@@ -92,26 +93,29 @@ const ActivityRow = ({ eco, i, total }) => (
 /* ── Main Component ─────────────────────────────────────────── */
 const AdminDashboard = () => {
   const { currentUser } = useAuth();
-  const [data, setData] = useState({ ecos: [], products: 0, boms: 0, members: 0, pending: 0, open: 0 });
+  const [data, setData] = useState({ ecos: [], products: 0, boms: 0, members: 0, pending: 0, open: 0, ready: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [eRes, pRes, bRes, mRes] = await Promise.all([
+        const [eRes, pRes, bRes, mRes, dashRes] = await Promise.all([
           getECOs().catch(() => ({ data: [] })),
           getProducts().catch(() => ({ data: [] })),
           getBOMs().catch(() => ({ data: [] })),
           getMembers().catch(() => ({ data: [] })),
+          getDashboardStats().catch(() => ({ data: {} })),
         ]);
         const ecos = eRes.data || [];
+        const d = dashRes.data || {};
         setData({
           ecos: ecos.slice(0, 8),
           products: (pRes.data || []).length,
           boms: (bRes.data || []).length,
           members: Array.isArray(mRes.data) ? mRes.data.length : 0,
-          pending: ecos.filter(e => e.stage === 'Approval' && e.status === 'Open').length,
-          open: ecos.filter(e => e.status === 'Open').length,
+          pending: d.pendingApproval ?? ecos.filter((e) => e.stage === 'Approval' && e.status === 'Open').length,
+          open: d.openECOs ?? ecos.filter((e) => e.status === 'Open').length,
+          ready: d.readyToApply ?? 0,
         });
       } finally {
         setLoading(false);
@@ -146,6 +150,7 @@ const AdminDashboard = () => {
         <KPICard label="Total Members" value={data.members} icon="👥" accent={cfg.accent} loading={loading} />
         <KPICard label="Active ECOs" value={data.open} icon="📋" accent="#0077B6" loading={loading} />
         <KPICard label="Pending Approvals" value={data.pending} icon="⏳" accent="#D97706" loading={loading} sub={data.pending > 0 ? 'Needs attention' : undefined} />
+        <KPICard label="Ready to apply" value={data.ready} icon="⚡" accent="#7C3AED" loading={loading} sub="Final stage — run Apply" />
         <KPICard label="Products" value={data.products} icon="📦" accent="#059669" loading={loading} />
       </div>
 

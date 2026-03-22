@@ -23,6 +23,7 @@ export const STATUS_VALUES = {
 export const ECO_STATUS = {
   OPEN: 'Open',
   APPLIED: 'Applied',
+  REJECTED: 'Rejected',
 };
 
 export const DIFF_COLORS = {

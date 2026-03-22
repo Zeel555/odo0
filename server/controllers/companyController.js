@@ -1,7 +1,8 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Company = require('../models/Company');
-const { ROLES } = require('../config/constants');
+const ECOStage = require('../models/ECOStage');
+const { ROLES, DEFAULT_STAGES } = require('../config/constants');
 
 /** Generate JWT including companyId */
 const signToken = (id, companyId) =>
@@ -40,6 +41,9 @@ const registerCompany = async (req, res) => {
   // Set company owner
   company.owner = user._id;
   await company.save();
+
+  // Default ECO workflow stages for this tenant
+  await ECOStage.insertMany(DEFAULT_STAGES.map((s) => ({ ...s, companyId: company._id })));
 
   const token = signToken(user._id, company._id);
   res.status(201).json({

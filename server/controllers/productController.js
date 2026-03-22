@@ -42,18 +42,10 @@ const createProduct = async (req, res) => {
 };
 
 const updateProduct = async (req, res) => {
-  const product = await Product.findOne({ _id: req.params.id, companyId: req.companyId });
-  if (!product) return res.status(404).json({ message: 'Product not found' });
-  if (product.status === STATUS_VALUES.ARCHIVED) {
-    return res.status(400).json({ message: 'Cannot edit an Archived product' });
-  }
-  const { name, salePrice, costPrice, attachments } = req.body;
-  if (name !== undefined) product.name = name;
-  if (salePrice !== undefined) product.salePrice = salePrice;
-  if (costPrice !== undefined) product.costPrice = costPrice;
-  if (attachments !== undefined) product.attachments = attachments;
-  await product.save();
-  res.json(product);
+  return res.status(403).json({
+    message:
+      'Direct product edits are disabled. Propose changes through an Engineering Change Order (ECO).',
+  });
 };
 
 const archiveProduct = async (req, res) => {

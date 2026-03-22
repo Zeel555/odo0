@@ -7,6 +7,7 @@ export const StatusBadge = ({ status }) => {
     Archived: { background: '#F1EFE8', color: '#5F5E5A', border: '1px solid #B4B2A9' },
     Open:     { background: '#CAF0F8', color: '#03045E', border: '1px solid #00B4D8' },
     Applied:  { background: '#EAF6FB', color: '#0077B6', border: '1px solid #0077B6' },
+    Rejected: { background: '#FCEBEB', color: '#791F1F', border: '1px solid #A32D2D' },
     New:      { background: '#F0F9FF', color: '#90E0EF', border: '1px solid #CAF0F8' },
     Approval: { background: '#CAF0F8', color: '#03045E', border: '1px solid #00B4D8' },
     Done:     { background: '#EAF6FB', color: '#0077B6', border: '1px solid #0077B6' },

@@ -34,12 +34,19 @@ const auditLogSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Company',
+      default: null,
+    },
     timestamp: {
       type: Date,
       default: Date.now,
     },
   }
 );
+
+auditLogSchema.index({ companyId: 1, timestamp: -1 });
 
 // Prevent modification after creation (audit immutability)
 auditLogSchema.set('timestamps', false);

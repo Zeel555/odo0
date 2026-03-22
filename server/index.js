@@ -14,6 +14,7 @@ const settingsRoutes = require('./routes/settings');
 const companyRoutes = require('./routes/company');
 const memberRoutes = require('./routes/members');
 const inviteRoutes = require('./routes/invite');
+const dashboardRoutes = require('./routes/dashboard');
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/company', companyRoutes);
 app.use('/api/members', memberRoutes);
 app.use('/api/invite', inviteRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));

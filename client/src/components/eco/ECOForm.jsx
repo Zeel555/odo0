@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Button from '../common/Button';
 import { useECO } from '../../hooks/useECO';
 import { useProducts } from '../../hooks/useProducts';
@@ -15,7 +15,8 @@ const ECOForm = () => {
   const navigate = useNavigate();
   const { fetchECOById, createECO, updateECO } = useECO();
   const { products, fetchProducts } = useProducts();
-  const { boms, fetchBOMs } = useBOM();
+  const { boms, fetchBOMs, fetchBOMById } = useBOM();
+  const [searchParams] = useSearchParams();
   const isEdit = Boolean(id);
 
   const [form, setForm] = useState({
@@ -27,6 +28,7 @@ const ECOForm = () => {
   const [proposedOperations, setProposedOperations] = useState([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [ecoAttachments, setEcoAttachments] = useState('');
 
   useEffect(() => {
     fetchProducts();
@@ -54,9 +56,36 @@ const ECOForm = () => {
           setProposedComponents(pc.components?.length ? pc.components : [{ product: '', quantity: 1 }]);
           setProposedOperations(pc.operations || []);
         }
+        setEcoAttachments((eco.attachmentUrls || []).join(', '));
       });
     }
   }, [id]);
+
+  /** Prefill from ?productId= & ?bomId= (master data changes go through ECO only) */
+  useEffect(() => {
+    if (isEdit) return;
+    const productId = searchParams.get('productId');
+    const bomId = searchParams.get('bomId');
+    const ecoTypeParam = searchParams.get('ecoType');
+    if (bomId) {
+      fetchBOMById(bomId).then((bom) => {
+        if (!bom) return;
+        const pid = bom.product?._id || bom.product;
+        setForm((f) => ({
+          ...f,
+          ecoType: ECO_TYPES.BOM,
+          product: String(pid),
+          bom: bomId,
+        }));
+      });
+    } else if (productId) {
+      setForm((f) => ({
+        ...f,
+        product: productId,
+        ecoType: ecoTypeParam === ECO_TYPES.BOM ? ECO_TYPES.BOM : ECO_TYPES.PRODUCT,
+      }));
+    }
+  }, [isEdit, searchParams, fetchBOMById]);
 
   const setField = (key, val) => setForm((prev) => ({ ...prev, [key]: val }));
 
@@ -81,9 +110,22 @@ const ECOForm = () => {
     setError('');
     setSaving(true);
     try {
-      const data = { ...form, versionUpdate: form.versionUpdate, proposedChanges: buildProposedChanges() };
+      const attachmentUrls = ecoAttachments.split(',').map((s) => s.trim()).filter(Boolean);
+      const data = {
+        ...form,
+        versionUpdate: form.versionUpdate,
+        proposedChanges: buildProposedChanges(),
+        attachmentUrls,
+      };
       if (isEdit) {
-        await updateECO(id, { title: form.title, effectiveDate: form.effectiveDate, versionUpdate: form.versionUpdate, bom: form.bom || undefined, proposedChanges: buildProposedChanges() });
+        await updateECO(id, {
+          title: form.title,
+          effectiveDate: form.effectiveDate,
+          versionUpdate: form.versionUpdate,
+          bom: form.bom || undefined,
+          proposedChanges: buildProposedChanges(),
+          attachmentUrls,
+        });
       } else {
         await createECO(data);
       }
@@ -171,6 +213,13 @@ const ECOForm = () => {
               Create new version on apply (otherwise patch in-place)
             </label>
           </div>
+
+          <FieldInput
+            label="ECO attachment URLs (comma-separated, optional)"
+            value={ecoAttachments}
+            onChange={setEcoAttachments}
+            placeholder="https://..., spec.pdf"
+          />
         </div>
 
         {/* Proposed Changes */}

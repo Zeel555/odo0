@@ -4,12 +4,13 @@ const BOM = require('../models/BOM');
 const ECO = require('../models/ECO');
 const { STATUS_VALUES } = require('../config/constants');
 
+const companyFilter = (req) => ({ companyId: req.companyId });
+
 /**
  * GET /api/reports/eco
- * ECO list with product and proposed changes summary.
  */
 const getECOReport = async (req, res) => {
-  const ecos = await ECO.find()
+  const ecos = await ECO.find(companyFilter(req))
     .populate('product', 'name version')
     .populate('bom', 'version')
     .populate('user', 'name role')
@@ -19,14 +20,12 @@ const getECOReport = async (req, res) => {
 
 /**
  * GET /api/reports/version-history
- * Per-product version history grouped by rootProduct.
  */
 const getVersionHistory = async (req, res) => {
-  const products = await Product.find()
+  const products = await Product.find(companyFilter(req))
     .populate('createdBy', 'name')
     .sort({ createdAt: 1 });
 
-  // Group by rootProduct (fall back to own _id for v1)
   const groups = {};
   for (const p of products) {
     const key = (p.rootProduct || p._id).toString();
@@ -38,10 +37,9 @@ const getVersionHistory = async (req, res) => {
 
 /**
  * GET /api/reports/bom-history
- * BOM versions grouped by rootBOM.
  */
 const getBOMHistory = async (req, res) => {
-  const boms = await BOM.find()
+  const boms = await BOM.find(companyFilter(req))
     .populate('product', 'name version')
     .sort({ createdAt: 1 });
 
@@ -56,13 +54,18 @@ const getBOMHistory = async (req, res) => {
 
 /**
  * GET /api/reports/archived
- * Archived products and BOMs.
  */
 const getArchived = async (req, res) => {
-  const products = await Product.find({ status: STATUS_VALUES.ARCHIVED })
+  const products = await Product.find({
+    ...companyFilter(req),
+    status: STATUS_VALUES.ARCHIVED,
+  })
     .populate('createdBy', 'name')
     .sort({ updatedAt: -1 });
-  const boms = await BOM.find({ status: STATUS_VALUES.ARCHIVED })
+  const boms = await BOM.find({
+    ...companyFilter(req),
+    status: STATUS_VALUES.ARCHIVED,
+  })
     .populate('product', 'name')
     .sort({ updatedAt: -1 });
   res.json({ products, boms });
@@ -70,18 +73,25 @@ const getArchived = async (req, res) => {
 
 /**
  * GET /api/reports/active-matrix
- * Active product → current version → active BOM version matrix.
  */
 const getActiveMatrix = async (req, res) => {
-  const products = await Product.find({ status: STATUS_VALUES.ACTIVE })
+  const products = await Product.find({
+    ...companyFilter(req),
+    status: STATUS_VALUES.ACTIVE,
+  })
     .populate('createdBy', 'name')
     .sort({ name: 1 });
-  const boms = await BOM.find({ status: STATUS_VALUES.ACTIVE })
+  const boms = await BOM.find({
+    ...companyFilter(req),
+    status: STATUS_VALUES.ACTIVE,
+  })
     .populate('product', 'name version')
     .sort({ createdAt: -1 });
 
   const matrix = products.map((p) => {
-    const matchingBOMs = boms.filter((b) => b.product && b.product._id.toString() === p._id.toString());
+    const matchingBOMs = boms.filter(
+      (b) => b.product && b.product._id.toString() === p._id.toString()
+    );
     return {
       product: p,
       activeBOMs: matchingBOMs,
@@ -92,11 +102,10 @@ const getActiveMatrix = async (req, res) => {
 
 /**
  * GET /api/reports/audit
- * Filterable audit log. Query params: model, action, userId
  */
 const getAuditLog = async (req, res) => {
   const { model, action, userId } = req.query;
-  const filter = {};
+  const filter = { companyId: req.companyId };
   if (model) filter.affectedModel = model;
   if (action) filter.action = action;
   if (userId) filter.performedBy = userId;

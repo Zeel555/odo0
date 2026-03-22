@@ -5,7 +5,7 @@ import { StatusBadge } from '../common/Badge';
 import Button from '../common/Button';
 import { useProducts } from '../../hooks/useProducts';
 import { useAuth } from '../../context/AuthContext';
-import { canCreateProduct, canEditProduct, isOperations } from '../../utils/roleGuard';
+import { canCreateProduct, canCreateECO, isOperations } from '../../utils/roleGuard';
 
 const ProductList = () => {
   const { products, loading, error, fetchProducts } = useProducts();
@@ -52,8 +52,8 @@ const ProductList = () => {
                 {/* Operations: no action buttons at all */}
                 {!opsMode && (
                   <div style={{ display: 'flex', gap: 6 }} onClick={(e) => e.stopPropagation()}>
-                    {canEditProduct(role) && (
-                      <Button size="sm" variant="secondary" onClick={() => navigate(`/products/${p._id}/edit`)}>Edit</Button>
+                    {canCreateECO(role) && p.status === 'Active' && (
+                      <Button size="sm" variant="secondary" onClick={() => navigate(`/eco/new?productId=${p._id}&ecoType=Product`)}>ECO</Button>
                     )}
                   </div>
                 )}

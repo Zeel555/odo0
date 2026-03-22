@@ -252,7 +252,37 @@ async function sendInviteEmail({
   }
 }
 
+/**
+ * Simple transactional email (ECO notifications, etc.)
+ */
+async function sendPlainEmail({ to, subject, text, html }) {
+  const transporter = getTransporter();
+  if (!transporter) {
+    return { sent: false };
+  }
+  const fromName = process.env.MAIL_FROM_NAME || 'RevoraX';
+  const fromAddr =
+    process.env.MAIL_FROM ||
+    process.env.GMAIL_USER ||
+    process.env.SMTP_USER;
+  const from = `"${fromName.replace(/"/g, '')}" <${fromAddr}>`;
+  try {
+    await transporter.sendMail({
+      from,
+      to,
+      subject,
+      text: text || '',
+      html: html || text || '',
+    });
+    return { sent: true };
+  } catch (err) {
+    console.error('[mail] sendPlainEmail failed:', err.message);
+    return { sent: false };
+  }
+}
+
 module.exports = {
   isMailConfigured,
   sendInviteEmail,
+  sendPlainEmail,
 };

@@ -8,6 +8,8 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getECOs, approveECO } from '../../api/eco';
+import { getDashboardStats } from '../../api/dashboard';
+import { ECO_STATUS } from '../../utils/constants';
 import { StatusBadge } from '../common/Badge';
 import { formatDate } from '../../utils/formatDate';
 import { getRoleConfig } from '../../utils/roleConfig';
@@ -109,13 +111,17 @@ const ApproverDashboard = () => {
     const load = async () => {
       setLoading(true);
       try {
-        const res = await getECOs().catch(() => ({ data: [] }));
+        const [res, dashRes] = await Promise.all([
+          getECOs().catch(() => ({ data: [] })),
+          getDashboardStats().catch(() => ({ data: {} })),
+        ]);
         const all = res.data || [];
+        const d = dashRes.data || {};
         setAllECOs(all);
         setStats({
-          pending: all.filter(e => e.stage === 'Approval' && e.status === 'Open').length,
-          approved: all.filter(e => e.status === 'Closed').length,
-          rejected: all.filter(e => e.status === 'Cancelled').length,
+          pending: d.pendingApproval ?? all.filter((e) => e.stage === 'Approval' && e.status === ECO_STATUS.OPEN).length,
+          approved: all.filter((e) => e.status === 'Applied').length,
+          rejected: all.filter((e) => e.status === ECO_STATUS.REJECTED).length,
         });
       } finally {
         setLoading(false);
