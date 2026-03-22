@@ -2,9 +2,9 @@ import { DIFF_COLORS, ECO_TYPES } from '../../utils/constants';
 import { computeProductDiff, computeBOMDiff } from '../../utils/diffUtils';
 
 const ROW_STYLES = {
-  [DIFF_COLORS.ADDED]:     { background: '#EAF3DE', borderLeft: '3px solid #3B6D11', color: '#27500A' },
-  [DIFF_COLORS.REDUCED]:   { background: '#FCEBEB', borderLeft: '3px solid #A32D2D', color: '#791F1F' },
-  [DIFF_COLORS.UNCHANGED]: { background: '#F5FBFF', borderLeft: '3px solid #CAF0F8', color: '#03045E' },
+  [DIFF_COLORS.ADDED]:     { background: 'rgba(5, 150, 105, 0.15)', borderLeftColor: '#10B981', color: '#6EE7B7' },
+  [DIFF_COLORS.REDUCED]:   { background: 'rgba(239, 68, 68, 0.15)', borderLeftColor: '#EF4444', color: '#FCA5A5' },
+  [DIFF_COLORS.UNCHANGED]: { background: 'rgba(255, 255, 255, 0.04)', borderLeftColor: 'rgba(255, 255, 255, 0.2)', color: 'rgba(255, 255, 255, 0.8)' },
 };
 
 const CHANGE_LABEL = {
@@ -14,67 +14,67 @@ const CHANGE_LABEL = {
 };
 
 const DiffTable = ({ children, headers }) => (
-  <div style={{ background: '#FFFFFF', border: '1.5px solid #90E0EF', borderRadius: 12, overflow: 'hidden' }}>
-    <div style={{ padding: '10px 14px', background: '#EAF6FB', borderBottom: '1.5px solid #CAF0F8' }}>
-      <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#03045E' }}>{headers}</p>
+  <div className="glass-card overflow-hidden">
+    <div className="px-3.5 py-2.5 bg-white/[0.04] border-b border-white/[0.08]">
+      <p className="m-0 text-xs font-semibold text-white/90">{headers}</p>
     </div>
-    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-      <thead>
-        <tr>
-          {['Component', 'Old Qty', 'New Qty', 'Change'].map((h) => (
-            <th key={h} style={{ background: '#F5FBFF', color: '#0077B6', fontWeight: 600, fontSize: 12, padding: '8px 14px', borderBottom: '1.5px solid #CAF0F8', textAlign: 'left' }}>
-              {h}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>{children}</tbody>
-    </table>
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse text-[13px] text-left">
+        <thead>
+          <tr className="bg-white/[0.02] border-b border-white/[0.05]">
+            {['Component', 'Old Qty', 'New Qty', 'Change'].map((h) => (
+              <th key={h} className="px-3.5 py-2 text-xs font-semibold text-white/50">{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>{children}</tbody>
+      </table>
+    </div>
   </div>
 );
 
 const ProductDiffTable = ({ diff }) => (
-  <div style={{ background: '#FFFFFF', border: '1.5px solid #90E0EF', borderRadius: 12, overflow: 'hidden' }}>
-    <div style={{ padding: '10px 14px', background: '#EAF6FB', borderBottom: '1.5px solid #CAF0F8' }}>
-      <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#03045E' }}>📦 Product Field Changes</p>
+  <div className="glass-card overflow-hidden">
+    <div className="px-3.5 py-2.5 bg-white/[0.04] border-b border-white/[0.08]">
+      <p className="m-0 text-xs font-semibold text-white/90">📦 Product Field Changes</p>
     </div>
-    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-      <thead>
-        <tr>
-          {['Field', 'Current Value', 'Proposed Value'].map((h) => (
-            <th key={h} style={{ background: '#F5FBFF', color: '#0077B6', fontWeight: 600, fontSize: 12, padding: '8px 14px', borderBottom: '1.5px solid #CAF0F8', textAlign: 'left' }}>
-              {h}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {diff.length === 0 ? (
-          <tr><td colSpan={3} style={{ padding: '24px', textAlign: 'center', color: '#90E0EF', fontSize: 13 }}>No changes proposed.</td></tr>
-        ) : (
-          diff.map(({ field, oldValue, newValue }) => {
-            const changed = JSON.stringify(oldValue) !== JSON.stringify(newValue);
-            const rowStyle = changed ? ROW_STYLES[DIFF_COLORS.ADDED] : ROW_STYLES[DIFF_COLORS.UNCHANGED];
-            return (
-              <tr key={field}>
-                <td style={{ ...rowStyle, padding: '9px 14px', fontWeight: 500, textTransform: 'capitalize', borderBottom: '1px solid #CAF0F8' }}>{field}</td>
-                <td style={{ ...rowStyle, padding: '9px 14px', color: '#6B7280', borderBottom: '1px solid #CAF0F8' }}>{fmt(oldValue)}</td>
-                <td style={{ ...rowStyle, padding: '9px 14px', fontWeight: 600, borderBottom: '1px solid #CAF0F8' }}>{fmt(newValue)}</td>
-              </tr>
-            );
-          })
-        )}
-      </tbody>
-    </table>
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse text-[13px] text-left">
+        <thead>
+          <tr className="bg-white/[0.02] border-b border-white/[0.05]">
+            {['Field', 'Current Value', 'Proposed Value'].map((h) => (
+              <th key={h} className="px-3.5 py-2 text-xs font-semibold text-white/50">{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {diff.length === 0 ? (
+            <tr><td colSpan={3} className="px-6 py-6 text-center text-[13px] text-white/40">No changes proposed.</td></tr>
+          ) : (
+            diff.map(({ field, oldValue, newValue }) => {
+              const changed = JSON.stringify(oldValue) !== JSON.stringify(newValue);
+              const rowStyle = changed ? ROW_STYLES[DIFF_COLORS.ADDED] : ROW_STYLES[DIFF_COLORS.UNCHANGED];
+              return (
+                <tr key={field} className="border-b border-white/[0.05] last:border-none">
+                  <td className="px-3.5 py-2.5 font-medium border-l-[3px]" style={{ ...rowStyle, color: 'rgba(255,255,255,0.9)', textTransform: 'capitalize' }}>{field}</td>
+                  <td className="px-3.5 py-2.5" style={{ ...rowStyle, borderLeft: 'none', color: 'rgba(255,255,255,0.5)' }}>{fmt(oldValue)}</td>
+                  <td className="px-3.5 py-2.5 font-semibold" style={{ ...rowStyle, borderLeft: 'none' }}>{fmt(newValue)}</td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
+    </div>
   </div>
 );
 
 /**
- * ECODiff — renders colored diff table for Product or BOM ECOs.
+ * ECODiff — renders colored diff table using glass-card dark theme.
  */
 const ECODiff = ({ ecoType, currentRecord, proposedChanges }) => {
   if (!currentRecord || !proposedChanges) {
-    return <p style={{ fontSize: 13, color: '#90E0EF' }}>No diff available.</p>;
+    return <p className="text-[13px] text-white/40">No diff available.</p>;
   }
 
   if (ecoType === ECO_TYPES.PRODUCT) {
@@ -87,18 +87,18 @@ const ECODiff = ({ ecoType, currentRecord, proposedChanges }) => {
     return (
       <DiffTable headers="🔧 Component Changes">
         {components.length === 0 ? (
-          <tr><td colSpan={4} style={{ padding: 24, textAlign: 'center', color: '#90E0EF' }}>No component changes.</td></tr>
+          <tr><td colSpan={4} className="px-6 py-6 text-center text-white/40">No component changes.</td></tr>
         ) : (
           components.map((c) => {
             const s = ROW_STYLES[c.changeType] || ROW_STYLES[DIFF_COLORS.UNCHANGED];
             return (
-              <tr key={c.componentId}>
-                <td style={{ ...s, padding: '9px 14px', fontWeight: 500, borderBottom: '1px solid #CAF0F8', borderRadius: '0 0 0 0', marginBottom: 4 }}>{c.componentName}</td>
-                <td style={{ ...s, padding: '9px 14px', borderBottom: '1px solid #CAF0F8' }}>{c.oldQty ?? <span style={{ color: '#90E0EF' }}>—</span>}</td>
-                <td style={{ ...s, padding: '9px 14px', fontWeight: 600, borderBottom: '1px solid #CAF0F8' }}>
-                  {c.newQty ?? <span style={{ color: '#A32D2D', fontWeight: 600 }}>Removed</span>}
+              <tr key={c.componentId} className="border-b border-white/[0.05] last:border-none mb-1">
+                <td className="px-3.5 py-2.5 font-medium border-l-[3px]" style={{ ...s, color: 'rgba(255,255,255,0.9)' }}>{c.componentName}</td>
+                <td className="px-3.5 py-2.5" style={{ ...s, borderLeft: 'none' }}>{c.oldQty ?? <span className="text-white/30">—</span>}</td>
+                <td className="px-3.5 py-2.5 font-semibold" style={{ ...s, borderLeft: 'none' }}>
+                  {c.newQty ?? <span className="text-red-400 font-bold">Removed</span>}
                 </td>
-                <td style={{ ...s, padding: '9px 14px', fontSize: 11, fontWeight: 600, borderBottom: '1px solid #CAF0F8' }}>
+                <td className="px-3.5 py-2.5 text-[11px] font-semibold" style={{ ...s, borderLeft: 'none' }}>
                   {CHANGE_LABEL[c.changeType]}
                 </td>
               </tr>

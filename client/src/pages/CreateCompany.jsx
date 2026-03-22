@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { registerCompany } from '../api/company';
 import { useAuth } from '../context/AuthContext';
+import AuroraBackground from '../components/ui/AuroraBackground';
 
 const CreateCompany = () => {
   const navigate = useNavigate();
@@ -29,7 +30,6 @@ const CreateCompany = () => {
         email: form.email,
         password: form.password,
       });
-      // Auto-login: store token and set user
       localStorage.setItem('token', res.data.token);
       setCurrentUserFromToken(res.data.user);
       navigate('/dashboard');
@@ -40,85 +40,94 @@ const CreateCompany = () => {
     }
   };
 
+  const inputCls = `w-full py-3 px-3.5 bg-white/10 border border-white/20 rounded-lg
+                    text-sm text-white placeholder-white/30 outline-none
+                    focus:border-plm-surf focus:ring-1 focus:ring-plm-surf/30
+                    transition-colors`;
+
   return (
-    <div style={{
-      minHeight: '100vh', background: 'linear-gradient(135deg, #F0F9FF 0%, #EAF6FB 100%)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontFamily: "'Inter', sans-serif", padding: 24,
-    }}>
-      <div style={{ width: '100%', maxWidth: 480, background: '#fff', borderRadius: 20, boxShadow: '0 8px 40px rgba(0,119,182,0.12)', border: '1.5px solid #90E0EF', padding: '48px 40px' }}>
+    <AuroraBackground>
+      <div className="min-h-screen w-full flex items-center justify-center px-4 py-10 sm:py-12">
+      <div className="w-full max-w-[480px] bg-white/10 backdrop-blur-xl
+                      rounded-2xl border border-white/20 shadow-2xl p-10 md:p-12">
         {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28 }}>
+        <div className="flex items-center gap-2.5 mb-7">
           <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
             <rect width="14" height="14" rx="3" fill="#0077B6"/>
             <rect x="18" width="14" height="14" rx="3" fill="#00B4D8"/>
             <rect y="18" width="14" height="14" rx="3" fill="#48CAE4"/>
             <rect x="18" y="18" width="14" height="14" rx="3" fill="#90E0EF"/>
           </svg>
-          <span style={{ fontWeight: 700, fontSize: 17, color: '#03045E' }}>RevoraX</span>
+          <span className="font-bold text-[17px] text-white">RevoraX</span>
         </div>
 
-        <h1 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 700, color: '#03045E' }}>Create Your Company</h1>
-        <p style={{ margin: '0 0 28px', fontSize: 13, color: '#90E0EF' }}>You'll be the Admin. Invite your team after setup.</p>
+        <h1 className="m-0 mb-1.5 text-[22px] font-bold text-white">Create Your Company</h1>
+        <p className="m-0 mb-7 text-sm text-white/50">You'll be the Admin. Invite your team after setup.</p>
 
         {error && (
-          <div style={{ background: '#FCEBEB', border: '1px solid #F28B82', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#A32D2D', marginBottom: 18 }}>
+          <div className="bg-red-500/20 border border-red-400/50 rounded-lg px-3.5 py-2.5
+                          text-sm text-red-200 mb-4">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Field label="Company Name">
             <input required value={form.companyName} onChange={e => setField('companyName', e.target.value)}
-              placeholder="Acme Corp" style={inputStyle} />
+              placeholder="Acme Corp" className={inputCls} />
           </Field>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="Your Name">
               <input required value={form.name} onChange={e => setField('name', e.target.value)}
-                placeholder="Alice Smith" style={inputStyle} />
+                placeholder="Alice Smith" className={inputCls} />
             </Field>
             <Field label="Email">
               <input type="email" required value={form.email} onChange={e => setField('email', e.target.value)}
-                placeholder="alice@acme.com" style={inputStyle} />
+                placeholder="alice@acme.com" className={inputCls} />
             </Field>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="Password">
               <input type="password" required value={form.password} onChange={e => setField('password', e.target.value)}
-                placeholder="min 6 chars" style={inputStyle} />
+                placeholder="min 6 chars" className={inputCls} />
             </Field>
             <Field label="Confirm Password">
               <input type="password" required value={form.confirmPassword} onChange={e => setField('confirmPassword', e.target.value)}
-                placeholder="repeat password" style={inputStyle} />
+                placeholder="repeat password" className={inputCls} />
             </Field>
           </div>
 
-          <button type="submit" disabled={loading} style={{
-            marginTop: 8, padding: '13px', background: loading ? '#90E0EF' : '#0077B6',
-            color: '#fff', border: 'none', borderRadius: 10, fontWeight: 600, fontSize: 14,
-            cursor: loading ? 'not-allowed' : 'pointer', transition: 'background 0.2s',
-          }}>
+          <button
+            type="submit" disabled={loading}
+            className={`mt-2 py-3.5 border-none rounded-xl font-semibold text-sm
+                        cursor-pointer transition-colors text-white
+                        ${loading
+                          ? 'bg-plm-frost/50 cursor-not-allowed'
+                          : 'bg-plm-ocean hover:bg-[#023E8A]'
+                        }`}
+          >
             {loading ? 'Creating…' : '🚀 Create Company & Get Started'}
           </button>
 
-          <p style={{ textAlign: 'center', fontSize: 13, color: '#90E0EF', margin: 0 }}>
+          <p className="text-center text-sm text-white/40 m-0">
             Already have an account?{' '}
-            <a href="/" style={{ color: '#0077B6', fontWeight: 600, textDecoration: 'none' }}>Sign in →</a>
+            <a href="/" className="text-plm-surf font-semibold no-underline hover:text-white transition-colors">
+              Sign in →
+            </a>
           </p>
         </form>
       </div>
-    </div>
+      </div>
+    </AuroraBackground>
   );
-};
-
-const inputStyle = {
-  width: '100%', padding: '10px 13px', border: '1.5px solid #90E0EF', borderRadius: 8,
-  fontSize: 13, outline: 'none', boxSizing: 'border-box', background: '#FAFEFF',
 };
 
 const Field = ({ label, children }) => (
   <div>
-    <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#0077B6', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</label>
+    <label className="block text-[11px] font-semibold text-white/60 mb-1.5
+                      uppercase tracking-wider">{label}</label>
     {children}
   </div>
 );

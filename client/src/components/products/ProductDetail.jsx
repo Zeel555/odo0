@@ -22,22 +22,29 @@ const ProductDetail = () => {
     navigate('/products');
   };
 
-  if (loading) return <div style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#90E0EF', fontSize: 13 }}>Loading…</div>;
-  if (!product) return <div style={{ color: '#A32D2D', padding: 16, fontSize: 13 }}>Product not found</div>;
+  if (loading) return (
+    <div className="h-40 flex items-center justify-center text-plm-frost text-[13px]">Loading…</div>
+  );
+  if (!product) return <div className="text-red-700 p-4 text-[13px]">Product not found</div>;
 
   return (
-    <div className="page-content" style={{ maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="page-content max-w-[640px] flex flex-col gap-5">
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#90E0EF' }}>←</button>
-        <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#03045E', flex: 1 }}>{product.name}</h2>
+      <div className="flex items-center gap-3">
+        <button onClick={() => navigate(-1)}
+          className="bg-transparent border-none cursor-pointer text-lg text-white/50 hover:text-white transition-colors">
+          ←
+        </button>
+        <h2 className="m-0 text-base font-semibold text-white/90 flex-1">{product.name}</h2>
         <StatusBadge status={product.status} />
       </div>
 
       {/* Info Card */}
-      <div style={{ background: '#FFFFFF', border: '1.5px solid #90E0EF', borderRadius: 12, padding: 20 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 20px' }}>
-          <Field label="Version"><span style={{ fontFamily: 'monospace', color: '#0077B6', fontWeight: 600 }}>{product.version}</span></Field>
+      <div className="glass-card p-5">
+        <div className="grid grid-cols-2 gap-x-5 gap-y-3">
+          <Field label="Version">
+            <span className="font-mono text-[#90E0EF] font-semibold bg-white/[0.08] px-2 py-0.5 rounded">{product.version}</span>
+          </Field>
           <Field label="Status"><StatusBadge status={product.status} /></Field>
           <Field label="Sale Price">${product.salePrice?.toLocaleString()}</Field>
           <Field label="Cost Price">${product.costPrice?.toLocaleString()}</Field>
@@ -46,11 +53,16 @@ const ProductDetail = () => {
         </div>
 
         {product.attachments?.length > 0 && (
-          <div style={{ marginTop: 14 }}>
-            <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 500, color: '#90E0EF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Attachments</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          <div className="mt-3.5 pt-3.5 border-t border-white/[0.08]">
+            <p className="m-0 mb-2 text-[11px] font-medium text-white/50 uppercase tracking-wider">
+              Attachments
+            </p>
+            <div className="flex flex-wrap gap-1.5">
               {product.attachments.map((a, i) => (
-                <span key={i} style={{ background: '#EAF6FB', color: '#0077B6', fontSize: 11, padding: '2px 8px', borderRadius: 6, border: '1px solid #90E0EF' }}>📎 {a}</span>
+                <span key={i} className="bg-white/[0.08] text-[#90E0EF] text-[11px] px-2.5 py-1
+                                          rounded-md border border-white/[0.1] hover:bg-white/[0.15] cursor-pointer transition-colors">
+                  📎 {a}
+                </span>
               ))}
             </div>
           </div>
@@ -58,17 +70,15 @@ const ProductDetail = () => {
       </div>
 
       {/* Actions — role-based */}
-      <div style={{ display: 'flex', gap: 10 }}>
-        {/* Version History: all roles */}
-        <Link to={`/products/${id}/history`} style={{ textDecoration: 'none' }}>
+      <div className="flex gap-2.5">
+        <Link to={`/products/${id}/history`} className="no-underline">
           <Button variant="secondary">📜 Version History</Button>
         </Link>
         {canCreateECO(role) && product.status === 'Active' && (
-          <Link to={`/eco/new?productId=${id}&ecoType=Product`} style={{ textDecoration: 'none' }}>
+          <Link to={`/eco/new?productId=${id}&ecoType=Product`} className="no-underline">
             <Button variant="secondary">📋 Propose change (ECO)</Button>
           </Link>
         )}
-        {/* Archive: admin only */}
         {canArchiveProduct(role) && product.status === 'Active' && (
           <Button variant="danger" onClick={handleArchive}>Archive</Button>
         )}
@@ -79,8 +89,8 @@ const ProductDetail = () => {
 
 const Field = ({ label, children }) => (
   <div>
-    <p style={{ margin: '0 0 3px', fontSize: 11, fontWeight: 500, color: '#90E0EF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
-    <div style={{ fontSize: 13, color: '#03045E' }}>{children}</div>
+    <p className="m-0 mb-0.5 text-[11px] font-medium text-white/40 uppercase tracking-wider">{label}</p>
+    <div className="text-[13px] text-white/90">{children}</div>
   </div>
 );
 

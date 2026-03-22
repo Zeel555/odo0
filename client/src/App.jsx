@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Routes, Route, Navigate, Outlet, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import { SidebarProvider, useSidebar } from './context/SidebarContext';
 import Sidebar from './components/common/Sidebar';
 import Topbar from './components/common/Topbar';
+import AuroraBackground from './components/ui/AuroraBackground';
 import ToastProvider, { showToast } from './components/common/Toast';
 
 // Pages
@@ -56,21 +58,20 @@ const BOMEcoRedirect = () => {
 };
 
 /* ──────────────────────────────────────────────────────────────
-   AUTH GUARD — redirect to / (landing) if not authenticated
+   AUTH GUARD
    ────────────────────────────────────────────────────────────── */
 const ProtectedRoute = () => {
   const { currentUser, loading } = useAuth();
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#F0F9FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ width: 24, height: 24, border: '2.5px solid #CAF0F8', borderTopColor: '#0077B6', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); }}`}</style>
+    <div className="min-h-screen bg-plm-page flex items-center justify-center">
+      <div className="w-6 h-6 border-[2.5px] border-plm-mist border-t-plm-ocean rounded-full animate-spin" />
     </div>
   );
   return currentUser ? <Outlet /> : <Navigate to="/" replace />;
 };
 
 /* ──────────────────────────────────────────────────────────────
-   PUBLIC ROUTE — redirect authenticated users to /dashboard
+   PUBLIC ROUTE
    ────────────────────────────────────────────────────────────── */
 const PublicOnlyRoute = ({ children }) => {
   const { currentUser, loading } = useAuth();
@@ -79,7 +80,7 @@ const PublicOnlyRoute = ({ children }) => {
 };
 
 /* ──────────────────────────────────────────────────────────────
-   ROLE GUARD — redirect to /dashboard + toast if insufficient role
+   ROLE GUARD
    ────────────────────────────────────────────────────────────── */
 const RoleGuardedRoute = ({ permissionFn, toastMsg, children }) => {
   const { currentUser } = useAuth();
@@ -92,19 +93,29 @@ const RoleGuardedRoute = ({ permissionFn, toastMsg, children }) => {
 };
 
 /* ──────────────────────────────────────────────────────────────
-   APP LAYOUT — fixed sidebar + topbar
+   APP LAYOUT — fixed sidebar + topbar (responsive)
    ────────────────────────────────────────────────────────────── */
-const AppLayout = ({ title }) => (
-  <div style={{ display: 'flex', minHeight: '100vh', background: '#F0F9FF' }}>
-    <Sidebar />
-    <div style={{ flex: 1, marginLeft: 220, display: 'flex', flexDirection: 'column' }}>
-      <Topbar title={title} />
-      <main className="page-content custom-scrollbar" style={{ flex: 1, padding: '72px 24px 24px', overflowY: 'auto' }}>
-        <Outlet />
-      </main>
-    </div>
-  </div>
-);
+const AppLayout = ({ title }) => {
+  const { collapsed } = useSidebar();
+  const marginLeft = collapsed ? 64 : 220;
+
+  return (
+    <AuroraBackground>
+      <div className="flex min-h-screen text-white">
+        <Sidebar />
+        <div
+          className="flex-1 flex flex-col content-transition relative z-10"
+          style={{ marginLeft }}
+        >
+          <Topbar title={title} />
+          <main className="page-content custom-scrollbar flex-1 pt-[72px] px-4 md:px-6 pb-6 overflow-y-auto">
+            <Outlet />
+          </main>
+        </div>
+      </div>
+    </AuroraBackground>
+  );
+};
 
 /* ──────────────────────────────────────────────────────────────
    REPORTS PAGE
@@ -118,16 +129,21 @@ const ReportsPage = () => {
     { id: 'archived', label: 'Archived Records' },
   ];
   return (
-    <div className="page-content" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ display: 'flex', gap: 4, borderBottom: '1.5px solid #CAF0F8' }}>
+    <div className="page-content flex flex-col gap-5">
+      <div className="flex gap-1 border-b border-plm-mist">
         {tabs.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
-            padding: '8px 16px', fontSize: 13, fontWeight: 500, border: 'none',
-            background: 'transparent', cursor: 'pointer', borderRadius: '8px 8px 0 0',
-            color: tab === t.id ? '#0077B6' : '#90E0EF',
-            borderBottom: tab === t.id ? '2px solid #0077B6' : '2px solid transparent',
-            transition: 'color 0.2s',
-          }}>{t.label}</button>
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`px-4 py-2 text-[13px] font-medium border-b-2 rounded-t-lg
+                        transition-colors bg-transparent cursor-pointer
+                        ${tab === t.id
+                          ? 'text-plm-ocean border-plm-ocean'
+                          : 'text-plm-frost border-transparent hover:text-plm-surf'
+                        }`}
+          >
+            {t.label}
+          </button>
         ))}
       </div>
       {tab === 'eco'      && <ECOReport />}
@@ -148,16 +164,21 @@ const SettingsPage = () => {
     { id: 'rules', label: 'Approval Rules' },
   ];
   return (
-    <div className="page-content" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ display: 'flex', gap: 4, borderBottom: '1.5px solid #CAF0F8' }}>
+    <div className="page-content flex flex-col gap-5">
+      <div className="flex gap-1 border-b border-plm-mist">
         {tabs.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
-            padding: '8px 16px', fontSize: 13, fontWeight: 500, border: 'none',
-            background: 'transparent', cursor: 'pointer', borderRadius: '8px 8px 0 0',
-            color: tab === t.id ? '#0077B6' : '#90E0EF',
-            borderBottom: tab === t.id ? '2px solid #0077B6' : '2px solid transparent',
-            transition: 'color 0.2s',
-          }}>{t.label}</button>
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`px-4 py-2 text-[13px] font-medium border-b-2 rounded-t-lg
+                        transition-colors bg-transparent cursor-pointer
+                        ${tab === t.id
+                          ? 'text-plm-ocean border-plm-ocean'
+                          : 'text-plm-frost border-transparent hover:text-plm-surf'
+                        }`}
+          >
+            {t.label}
+          </button>
         ))}
       </div>
       {tab === 'stages' && <StageManager />}
@@ -176,7 +197,6 @@ const App = () => (
       {/* ── Public / Unauthenticated ──────────────────── */}
       <Route path="/" element={<PublicOnlyRoute><Landing /></PublicOnlyRoute>} />
       <Route path="/create-company" element={<PublicOnlyRoute><CreateCompany /></PublicOnlyRoute>} />
-      {/* Invite accept is always public (recipients aren't logged in) */}
       <Route path="/invite/:token" element={<InviteAccept />} />
 
       {/* ── All authenticated routes ──────────────────── */}

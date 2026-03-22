@@ -1,11 +1,9 @@
 /**
  * ApproverDashboard.jsx
  * Focus: REVIEW & APPROVE ECOs
- * Shows: Pending Approvals (highlighted), Approved, Rejected
- * Actions: Approve (green), Reject (red), View diff
  */
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getECOs, approveECO } from '../../api/eco';
 import { getDashboardStats } from '../../api/dashboard';
@@ -13,33 +11,45 @@ import { ECO_STATUS } from '../../utils/constants';
 import { StatusBadge } from '../common/Badge';
 import { formatDate } from '../../utils/formatDate';
 import { getRoleConfig } from '../../utils/roleConfig';
+import ShineBorder from '../ui/ShineBorder';
 
 const cfg = getRoleConfig('approver');
 
 /* ── Stat Card ─────────────────────────────────────────────── */
-const StatCard = ({ label, value, icon, accent, bg, border, loading, urgent }) => (
-  <div style={{
-    background: urgent ? '#FFF7ED' : '#FFFFFF',
-    border: `1.5px solid ${urgent ? '#FCD34D' : border || '#E2E8F0'}`,
-    borderRadius: 14, padding: '18px 20px',
-    position: 'relative', overflow: 'hidden',
-  }}>
-    {urgent && (
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-        background: 'linear-gradient(90deg, #F59E0B, #EF4444)',
-      }} />
-    )}
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-      <span style={{ fontSize: 22 }}>{icon}</span>
-      {urgent && <span style={{ fontSize: 10, fontWeight: 700, background: '#FEF2F2', color: '#DC2626', padding: '2px 7px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: '0.04em' }}>ACTION NEEDED</span>}
+const StatCard = ({ label, value, icon, loading, urgent, border, shine }) => {
+  const content = (
+    <div className={`rounded-xl px-5 py-[18px] relative overflow-hidden h-full flex flex-col justify-center
+                     ${urgent ? 'bg-amber-900/[0.15] border border-amber-500/30' : 'glass-card'}`}
+         style={!urgent && border ? { borderColor: `${border}30` } : undefined}>
+      {urgent && (
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-400 to-red-500" />
+      )}
+      <div className="flex items-center justify-between mb-2.5">
+        <span className="text-[22px]">{icon}</span>
+        {urgent && (
+          <span className="text-[10px] font-bold bg-amber-500/20 text-amber-200 px-2 py-0.5
+                           rounded-full uppercase tracking-wider border border-amber-500/30">
+            ACTION NEEDED
+          </span>
+        )}
+      </div>
+      <p className={`m-0 text-[28px] font-bold ${urgent ? 'text-amber-400' : 'text-white'}`}>
+        {loading ? '…' : value}
+      </p>
+      <p className="m-0 mt-1 text-xs font-semibold text-white/50 uppercase tracking-wider">{label}</p>
     </div>
-    <p style={{ margin: 0, fontSize: 28, fontWeight: 700, color: urgent ? '#B45309' : '#0F172A' }}>
-      {loading ? '…' : value}
-    </p>
-    <p style={{ margin: '4px 0 0', fontSize: 12, fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
-  </div>
-);
+  );
+
+  if (shine) {
+    return (
+      <ShineBorder colors={['#D97706', '#EF4444', '#F59E0B']} borderWidth={2} className="h-full">
+        {content}
+      </ShineBorder>
+    );
+  }
+
+  return content;
+};
 
 /* ── Approve / Reject Row ───────────────────────────────────── */
 const ApprovalRow = ({ eco, i, total, onAction }) => {
@@ -52,46 +62,34 @@ const ApprovalRow = ({ eco, i, total, onAction }) => {
     try {
       await approveECO(eco._id);
       onAction();
-    } catch {
-      /* handled globally */
-    } finally {
-      setBusy(false);
-    }
+    } catch { /* handled globally */ } finally { setBusy(false); }
   };
 
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 14,
-      padding: '14px 18px',
-      borderBottom: i < total - 1 ? '1px solid #F1F5F9' : 'none',
-      background: '#FFFFFF',
-    }}>
-      {/* Urgency dot */}
-      <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#F59E0B', flexShrink: 0, boxShadow: '0 0 0 3px #FEF3C7' }} />
-
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <Link to={`/eco/${eco._id}`} style={{ textDecoration: 'none' }}>
-          <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{eco.title}</p>
-          <p style={{ margin: '2px 0 0', fontSize: 11, color: '#94A3B8' }}>
+    <div className="flex items-center gap-3.5 px-[18px] py-3.5 hover:bg-white/[0.08] transition-colors"
+         style={{ borderBottom: i < total - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+      <div className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0 shadow-[0_0_0_3px_rgba(251,191,36,0.2)]" />
+      <div className="flex-1 min-w-0">
+        <Link to={`/eco/${eco._id}`} className="no-underline">
+          <p className="m-0 text-[13px] font-semibold text-white/90 truncate">{eco.title}</p>
+          <p className="m-0 mt-0.5 text-[11px] text-white/50">
             {eco.product?.name || '—'} · Submitted {formatDate(eco.updatedAt || eco.createdAt)}
           </p>
         </Link>
       </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+      <div className="flex items-center gap-2 flex-shrink-0">
         <StatusBadge status={eco.status} />
-        <Link to={`/eco/${eco._id}`} style={{
-          fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6,
-          background: '#F1F5F9', color: '#475569', textDecoration: 'none', border: '1px solid #E2E8F0',
-        }}>View</Link>
-        <button onClick={handleApprove} disabled={busy} style={{
-          fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6,
-          background: '#DCFCE7', color: '#166534', border: '1px solid #BBF7D0',
-          cursor: 'pointer', transition: 'background 0.15s',
-        }}
-          onMouseEnter={e => e.currentTarget.style.background = '#BBF7D0'}
-          onMouseLeave={e => e.currentTarget.style.background = '#DCFCE7'}
-        >{busy ? '…' : '✓ Approve'}</button>
+        <Link to={`/eco/${eco._id}`}
+          className="text-[11px] font-semibold px-2.5 py-1 rounded-md no-underline
+                     bg-white/[0.1] text-white/80 border border-white/[0.15] hover:bg-white/[0.15] transition-colors">
+          View
+        </Link>
+        <button onClick={handleApprove} disabled={busy}
+          className="text-[11px] font-semibold px-2.5 py-1 rounded-md border
+                     bg-green-500/20 text-green-300 border-green-500/30
+                     hover:bg-green-500/30 transition-colors cursor-pointer disabled:opacity-50">
+          {busy ? '…' : '✓ Approve'}
+        </button>
       </div>
     </div>
   );
@@ -123,9 +121,7 @@ const ApproverDashboard = () => {
           approved: all.filter((e) => e.status === 'Applied').length,
           rejected: all.filter((e) => e.status === ECO_STATUS.REJECTED).length,
         });
-      } finally {
-        setLoading(false);
-      }
+      } finally { setLoading(false); }
     };
     load();
   }, [tick]);
@@ -134,65 +130,68 @@ const ApproverDashboard = () => {
   const greeting = (() => { const h = new Date().getHours(); return h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening'; })();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+    <div className="flex flex-col gap-7">
 
       {/* Header */}
       <div>
-        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#0F172A' }}>
+        <h2 className="m-0 text-[22px] font-bold text-white/90">
           Good {greeting}, {currentUser?.name?.split(' ')[0]} 👋
         </h2>
-        <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748B' }}>
+        <p className="m-0 mt-1 text-[13px] text-white/50">
           Approver workspace — review pending ECOs and make decisions.
         </p>
       </div>
 
       {/* Stat Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14 }}>
-        <StatCard label="Pending Approvals" value={stats.pending} icon="⏳" loading={loading} urgent={stats.pending > 0} />
-        <StatCard label="Approved ECOs" value={stats.approved} icon="✅" loading={loading} border="#BBF7D0" />
-        <StatCard label="Rejected / Cancelled" value={stats.rejected} icon="❌" loading={loading} border="#FECACA" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+        <StatCard label="Pending Approvals" value={stats.pending} icon="⏳" loading={loading}
+                  urgent={stats.pending > 0} shine={stats.pending > 0} />
+        <StatCard label="Approved ECOs" value={stats.approved} icon="✅" loading={loading} border="#10B981" />
+        <StatCard label="Rejected / Cancelled" value={stats.rejected} icon="❌" loading={loading} border="#EF4444" />
       </div>
 
       {/* Urgent Banner */}
       {!loading && stats.pending > 0 && (
-        <div style={{
-          background: 'linear-gradient(135deg, #FFF7ED, #FFFBEB)',
-          border: '1.5px solid #FCD34D', borderRadius: 12,
-          padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12,
-        }}>
-          <span style={{ fontSize: 20 }}>🔔</span>
+        <div className="bg-amber-500/10 border border-amber-500/30 backdrop-blur-md
+                        rounded-xl px-[18px] py-3.5 flex items-center gap-3">
+          <span className="text-xl">🔔</span>
           <div>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#92400E' }}>
+            <p className="m-0 text-[13px] font-bold text-amber-300">
               {stats.pending} ECO{stats.pending > 1 ? 's' : ''} require your approval
             </p>
-            <p style={{ margin: '2px 0 0', fontSize: 12, color: '#B45309' }}>Review and approve or reject them below.</p>
+            <p className="m-0 mt-0.5 text-xs text-amber-200/70">Review and approve or reject them below.</p>
           </div>
         </div>
       )}
 
       {/* Pending Approvals List */}
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="m-0 text-sm font-bold text-white/90">
             Pending Approvals
             {stats.pending > 0 && (
-              <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, background: '#FEF2F2', color: '#DC2626', padding: '2px 8px', borderRadius: 20 }}>{stats.pending}</span>
+              <span className="ml-2 text-[11px] font-bold bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full border border-red-500/30">
+                {stats.pending}
+              </span>
             )}
           </h3>
-          <Link to="/eco" style={{ fontSize: 12, color: cfg.accent, textDecoration: 'none', fontWeight: 500 }}>View all ECOs →</Link>
+          <Link to="/eco" className="text-xs font-medium no-underline text-[#FCD34D] hover:text-[#FDE68A] transition-colors">
+            View all ECOs →
+          </Link>
         </div>
 
-        <div style={{ background: '#FFFFFF', border: `1.5px solid ${stats.pending > 0 ? '#FCD34D' : '#E2E8F0'}`, borderRadius: 14, overflow: 'hidden' }}>
+        <div className={`glass-card overflow-hidden border
+                         ${stats.pending > 0 ? 'border-amber-500/40' : 'border-white/[0.12]'}`}>
           {loading ? (
-            <div style={{ padding: 40, textAlign: 'center' }}>
-              <div style={{ width: 22, height: 22, border: '2.5px solid #FDE68A', borderTopColor: '#F59E0B', borderRadius: '50%', animation: 'spin 0.7s linear infinite', margin: '0 auto' }} />
-              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            <div className="py-10 text-center">
+              <div className="w-[22px] h-[22px] border-[2.5px] border-amber-500/30 border-t-amber-400
+                              rounded-full animate-spin mx-auto" />
             </div>
           ) : pendingECOs.length === 0 ? (
-            <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>✅</div>
-              <p style={{ margin: 0, fontSize: 14, color: '#64748B', fontWeight: 600 }}>All caught up!</p>
-              <p style={{ margin: '6px 0 0', fontSize: 12, color: '#94A3B8' }}>No ECOs pending your approval right now.</p>
+            <div className="py-12 px-6 text-center">
+              <div className="text-4xl mb-3">✅</div>
+              <p className="m-0 text-sm text-white/60 font-semibold">All caught up!</p>
+              <p className="m-0 mt-1.5 text-xs text-white/40">No ECOs pending your approval right now.</p>
             </div>
           ) : (
             pendingECOs.map((eco, i) => (
@@ -202,16 +201,16 @@ const ApproverDashboard = () => {
         </div>
       </div>
 
-      {/* All ECOs quick link */}
-      <div style={{ display: 'flex', gap: 10 }}>
-        <Link to="/eco" style={{
-          textDecoration: 'none', padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-          background: '#F1F5F9', color: '#475569', border: '1px solid #E2E8F0',
-        }}>Browse All ECOs</Link>
-        <Link to="/reports" style={{
-          textDecoration: 'none', padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-          background: cfg.badge.bg, color: cfg.badge.color, border: `1px solid ${cfg.accentBorder}`,
-        }}>View Reports</Link>
+      {/* Quick links */}
+      <div className="flex gap-2.5">
+        <Link to="/eco" className="no-underline px-4 py-2 rounded-lg text-xs font-semibold
+                                    bg-white/[0.1] text-white/80 border border-white/[0.15] hover:bg-white/[0.15] transition-colors">
+          Browse All ECOs
+        </Link>
+        <Link to="/reports" className="no-underline px-4 py-2 rounded-lg text-xs font-semibold
+                                       bg-amber-500/20 text-amber-200 border border-amber-500/30 hover:bg-amber-500/30 transition-colors">
+          View Reports
+        </Link>
       </div>
     </div>
   );

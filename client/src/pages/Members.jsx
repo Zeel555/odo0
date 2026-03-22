@@ -29,10 +29,7 @@ const Members = () => {
 
   const handleInvite = async (e) => {
     e.preventDefault();
-    setInviteError('');
-    setEmailNotice('');
-    setEmailSent(null);
-    setInviting(true);
+    setInviteError(''); setEmailNotice(''); setEmailSent(null); setInviting(true);
     try {
       const res = await inviteMember(inviteForm);
       setInviteLink(res.data.inviteUrl);
@@ -42,9 +39,7 @@ const Members = () => {
       load();
     } catch (err) {
       setInviteError(err.response?.data?.message || 'Failed to send invite');
-    } finally {
-      setInviting(false);
-    }
+    } finally { setInviting(false); }
   };
 
   const handleResend = async (inviteId) => {
@@ -54,40 +49,38 @@ const Members = () => {
       setInviteLink(res.data.inviteUrl);
       setEmailSent(res.data.emailSent === true);
       setEmailNotice(res.data.emailNotice || '');
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to resend');
-    }
+    } catch (err) { alert(err.response?.data?.message || 'Failed to resend'); }
   };
 
   const handleRemove = async (userId) => {
     if (!window.confirm('Remove this member from your company?')) return;
-    try {
-      await removeMember(userId);
-      load();
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to remove');
-    }
+    try { await removeMember(userId); load(); }
+    catch (err) { alert(err.response?.data?.message || 'Failed to remove'); }
   };
 
   const activeUsers = users.filter(u => u.isActive !== false);
   const totalUsers = activeUsers.length;
 
   return (
-    <div className="page-content" style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 900 }}>
+    <div className="page-content flex flex-col gap-5 w-full max-w-7xl mx-auto">
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="flex items-center justify-between">
         <div>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#03045E' }}>Team Members</h2>
-          <p style={{ margin: '3px 0 0', fontSize: 12, color: '#90E0EF' }}>Manage who has access to your company workspace.</p>
+          <h2 className="m-0 text-lg font-bold text-white/90">Team Members</h2>
+          <p className="m-0 mt-0.5 text-xs text-white/50">
+            Manage who has access to your company workspace.
+          </p>
         </div>
-        <button onClick={() => { setShowInviteForm(s => !s); setInviteLink(''); setInviteError(''); setEmailSent(null); setEmailNotice(''); }}
-          style={{ padding: '10px 18px', background: '#0077B6', color: '#fff', border: 'none', borderRadius: 9, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+        <button
+          onClick={() => { setShowInviteForm(s => !s); setInviteLink(''); setInviteError(''); setEmailSent(null); setEmailNotice(''); }}
+          className="px-[18px] py-2.5 bg-white/[0.1] text-white border border-white/[0.15] rounded-[9px]
+                     font-semibold text-[13px] cursor-pointer hover:bg-white/[0.15] transition-colors">
           {showInviteForm ? '✕ Cancel' : '+ Invite Member'}
         </button>
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+      <div className="grid grid-cols-3 gap-3">
         <StatCard label="Total Members" value={totalUsers} icon="👤" />
         <StatCard label="Active" value={activeUsers.length} icon="✅" />
         <StatCard label="Pending Invites" value={invites.length} icon="📨" />
@@ -95,46 +88,67 @@ const Members = () => {
 
       {/* Invite Form */}
       {showInviteForm && (
-        <div style={{ background: '#EAF6FB', border: '1.5px solid #90E0EF', borderRadius: 12, padding: 20 }}>
-          <h3 style={{ margin: '0 0 16px', fontSize: 14, fontWeight: 600, color: '#03045E' }}>Invite a Team Member</h3>
-          {inviteError && <div style={{ background: '#FCEBEB', border: '1px solid #F28B82', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#A32D2D', marginBottom: 12 }}>{inviteError}</div>}
+        <div className="glass-card p-5 border-white/[0.2] bg-white/[0.04]">
+          <h3 className="m-0 mb-4 text-sm font-semibold text-white/90">Invite a Team Member</h3>
+
+          {inviteError && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-xs text-red-400 mb-3">
+              {inviteError}
+            </div>
+          )}
           {emailSent === true && (
-            <div style={{ background: '#E6F7ED', border: '1px solid #34A853', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#1E6B3A', marginBottom: 12 }}>
+            <div className="bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-2 text-xs text-green-400 mb-3">
               ✉️ Invite email sent to the address you entered.
             </div>
           )}
           {emailSent === false && emailNotice && (
-            <div style={{ background: '#FFF8E6', border: '1px solid #F9AB00', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#7A5A00', marginBottom: 12 }}>
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2 text-xs text-amber-400 mb-3">
               {emailNotice}
             </div>
           )}
-          <form onSubmit={handleInvite} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 10, alignItems: 'end' }}>
+
+          <form onSubmit={handleInvite} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-2.5 items-end">
             <FormField label="Name">
               <input required value={inviteForm.name} onChange={e => setInviteForm(f => ({ ...f, name: e.target.value }))}
-                placeholder="Bob Smith" style={inpStyle} />
+                placeholder="Bob Smith" className="w-full px-3 py-2.5 border border-white/[0.15] rounded-lg text-[13px] bg-white/[0.04] text-white placeholder-white/30 outline-none
+                                                    focus:border-[#00B4D8] focus:ring-1 focus:ring-[#00B4D8]/30 transition-all" />
             </FormField>
             <FormField label="Email">
               <input type="email" required value={inviteForm.email} onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))}
-                placeholder="bob@company.com" style={inpStyle} />
+                placeholder="bob@company.com" className="w-full px-3 py-2.5 border border-white/[0.15] rounded-lg text-[13px] bg-white/[0.04] text-white placeholder-white/30 outline-none
+                                                          focus:border-[#00B4D8] focus:ring-1 focus:ring-[#00B4D8]/30 transition-all" />
             </FormField>
             <FormField label="Role">
-              <select value={inviteForm.role} onChange={e => setInviteForm(f => ({ ...f, role: e.target.value }))} style={inpStyle}>
+              <select value={inviteForm.role} onChange={e => setInviteForm(f => ({ ...f, role: e.target.value }))}
+                className="w-full px-3 py-2.5 border border-white/[0.15] rounded-lg text-[13px] bg-[#0a0e27] text-white outline-none
+                           focus:border-[#00B4D8] focus:ring-1 focus:ring-[#00B4D8]/30 transition-all">
                 {ROLES.map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
               </select>
             </FormField>
-            <button type="submit" disabled={inviting} style={{ padding: '10px 18px', background: '#0077B6', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            <button type="submit" disabled={inviting}
+              className="px-[18px] py-2.5 bg-gradient-to-r from-[#00B4D8] to-[#0077B6] text-white border-none rounded-lg
+                         font-semibold text-[13px] cursor-pointer whitespace-nowrap
+                         hover:opacity-90 transition-opacity disabled:opacity-50">
               {inviting ? '…' : 'Send Invite'}
             </button>
           </form>
 
           {inviteLink && (
-            <div style={{ marginTop: 14, background: '#fff', border: '1.5px dashed #00B4D8', borderRadius: 8, padding: '12px 14px' }}>
-              <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 600, color: '#0077B6', textTransform: 'uppercase' }}>Invite Link (share this)</p>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <code style={{ flex: 1, fontSize: 12, color: '#03045E', wordBreak: 'break-all', background: '#F0F9FF', padding: '6px 10px', borderRadius: 6 }}>{inviteLink}</code>
-                <button onClick={() => navigator.clipboard.writeText(inviteLink)} style={{ padding: '6px 12px', background: '#0077B6', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>Copy</button>
+            <div className="mt-3.5 bg-white/[0.04] border-2 border-dashed border-[#00B4D8]/40 rounded-lg px-3.5 py-3">
+              <p className="m-0 mb-1.5 text-[11px] font-semibold text-[#90E0EF] uppercase">
+                Invite Link (share this)
+              </p>
+              <div className="flex gap-2 items-center">
+                <code className="flex-1 text-xs text-white/90 break-all bg-black/30 px-2.5 py-1.5 rounded-md">
+                  {inviteLink}
+                </code>
+                <button onClick={() => navigator.clipboard.writeText(inviteLink)}
+                  className="px-3 py-1.5 bg-white/[0.1] text-white border border-white/[0.15] rounded-md text-xs cursor-pointer
+                             hover:bg-white/[0.15] transition-colors">
+                  Copy
+                </button>
               </div>
-              <p style={{ margin: '6px 0 0', fontSize: 11, color: '#90E0EF' }}>⏰ This link expires in 24 hours.</p>
+              <p className="m-0 mt-1.5 text-[11px] text-white/40">⏰ This link expires in 24 hours.</p>
             </div>
           )}
         </div>
@@ -142,22 +156,33 @@ const Members = () => {
 
       {/* Members Table */}
       {loading ? (
-        <div style={{ textAlign: 'center', color: '#90E0EF', padding: 40, fontSize: 13 }}>Loading…</div>
+        <div className="text-center text-white/40 py-10 text-[13px]">Loading…</div>
       ) : (
         <div>
-          <div style={{ background: '#fff', border: '1.5px solid #90E0EF', borderRadius: 12, overflow: 'hidden' }}>
-            <div style={{ background: '#EAF6FB', display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr', padding: '10px 16px', fontSize: 11, fontWeight: 700, color: '#0077B6', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div className="glass-card overflow-hidden">
+            {/* Table header */}
+            <div className="bg-white/[0.04] border-b border-white/[0.08] grid grid-cols-[2fr_2fr_1fr_1fr_1fr] px-4 py-2.5
+                            text-[11px] font-bold text-white/50 uppercase tracking-wider">
               <span>Name</span><span>Email</span><span>Role</span><span>Status</span><span>Actions</span>
             </div>
             {activeUsers.map((u, i) => (
-              <div key={u._id} style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr', padding: '12px 16px', borderTop: '1px solid #CAF0F8', alignItems: 'center', background: i % 2 === 0 ? '#fff' : '#FAFEFF' }}>
-                <span style={{ fontWeight: 500, fontSize: 13, color: '#03045E' }}>{u.name} {u._id === currentUser?._id ? <span style={{ fontSize: 10, background: '#EAF6FB', color: '#0077B6', padding: '1px 6px', borderRadius: 4 }}>You</span> : ''}</span>
-                <span style={{ fontSize: 12, color: '#90E0EF' }}>{u.email}</span>
+              <div key={u._id}
+                className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr] px-4 py-3 items-center border-b border-white/[0.05] last:border-none hover:bg-white/[0.04] transition-colors">
+                <span className="font-medium text-[13px] text-white/90">
+                  {u.name} {u._id === currentUser?._id && (
+                    <span className="text-[10px] bg-white/[0.1] text-[#90E0EF] px-1.5 py-0.5 rounded ml-1">You</span>
+                  )}
+                </span>
+                <span className="text-xs text-white/60">{u.email}</span>
                 <RolePill role={u.role} />
-                <span style={{ fontSize: 11, color: '#0077B6', fontWeight: 500 }}>Active</span>
+                <span className="text-[11px] text-[#6EE7B7] font-medium">Active</span>
                 <div>
                   {u._id !== currentUser?._id && (
-                    <button onClick={() => handleRemove(u._id)} style={{ fontSize: 11, color: '#A32D2D', background: 'none', border: '1px solid #F28B82', borderRadius: 5, padding: '3px 8px', cursor: 'pointer' }}>Remove</button>
+                    <button onClick={() => handleRemove(u._id)}
+                      className="text-[11px] text-red-400 bg-red-500/10 border border-red-500/20
+                                 rounded-[5px] px-2 py-0.5 cursor-pointer hover:bg-red-500/20 transition-colors">
+                      Remove
+                    </button>
                   )}
                 </div>
               </div>
@@ -166,16 +191,23 @@ const Members = () => {
 
           {/* Pending Invites */}
           {invites.length > 0 && (
-            <div style={{ marginTop: 20 }}>
-              <h3 style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 600, color: '#0077B6' }}>Pending Invites ({invites.length})</h3>
-              <div style={{ background: '#fff', border: '1.5px solid #90E0EF', borderRadius: 12, overflow: 'hidden' }}>
+            <div className="mt-5">
+              <h3 className="m-0 mb-2.5 text-[13px] font-semibold text-[#90E0EF]">
+                Pending Invites ({invites.length})
+              </h3>
+              <div className="glass-card overflow-hidden bg-white/[0.02] border-white/[0.08]">
                 {invites.map((inv, i) => (
-                  <div key={inv._id} style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr', padding: '12px 16px', borderTop: i > 0 ? '1px solid #CAF0F8' : 'none', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 500, fontSize: 13, color: '#03045E' }}>{inv.name}</span>
-                    <span style={{ fontSize: 12, color: '#90E0EF' }}>{inv.email}</span>
+                  <div key={inv._id}
+                    className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr] px-4 py-3 items-center border-b border-white/[0.05] last:border-none">
+                    <span className="font-medium text-[13px] text-white/80">{inv.name}</span>
+                    <span className="text-xs text-white/50">{inv.email}</span>
                     <RolePill role={inv.role} />
-                    <span style={{ fontSize: 11, color: '#00B4D8', fontWeight: 500 }}>⏳ Pending</span>
-                    <button onClick={() => handleResend(inv._id)} style={{ fontSize: 11, color: '#0077B6', background: 'none', border: '1px solid #90E0EF', borderRadius: 5, padding: '3px 8px', cursor: 'pointer' }}>Resend</button>
+                    <span className="text-[11px] text-[#FCD34D] font-medium">⏳ Pending</span>
+                    <button onClick={() => handleResend(inv._id)}
+                      className="text-[11px] text-[#90E0EF] bg-white/[0.05] border border-white/[0.1]
+                                 rounded-[5px] px-2 py-0.5 cursor-pointer hover:bg-white/[0.1] transition-colors">
+                      Resend
+                    </button>
                   </div>
                 ))}
               </div>
@@ -188,29 +220,33 @@ const Members = () => {
 };
 
 const StatCard = ({ label, value, icon }) => (
-  <div style={{ background: '#fff', border: '1.5px solid #90E0EF', borderRadius: 12, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
-    <span style={{ fontSize: 24 }}>{icon}</span>
+  <div className="glass-card px-[18px] py-4 flex items-center gap-3.5">
+    <span className="text-2xl">{icon}</span>
     <div>
-      <div style={{ fontSize: 22, fontWeight: 700, color: '#03045E', lineHeight: 1 }}>{value}</div>
-      <div style={{ fontSize: 11, color: '#90E0EF', fontWeight: 500, marginTop: 2 }}>{label}</div>
+      <div className="text-[22px] font-bold text-white/90 leading-none">{value}</div>
+      <div className="text-[11px] text-white/50 font-medium mt-0.5">{label}</div>
     </div>
   </div>
 );
 
 const RolePill = ({ role }) => {
-  const colors = { admin: '#0077B6', engineering: '#48CAE4', approver: '#00B4D8', operations: '#90E0EF' };
+  const colors = { admin: 'rgba(124,58,237,0.3)', engineering: 'rgba(0,119,182,0.4)', approver: 'rgba(217,119,6,0.4)', operations: 'rgba(5,150,105,0.4)' };
+  const textColors = { admin: '#C4B5FD', engineering: '#90E0EF', approver: '#FDE68A', operations: '#A7F3D0' };
+  const borderColors = { admin: 'rgba(124,58,237,0.5)', engineering: 'rgba(0,119,182,0.6)', approver: 'rgba(217,119,6,0.6)', operations: 'rgba(5,150,105,0.6)' };
+  
   return (
-    <span style={{ fontSize: 11, fontWeight: 600, color: '#fff', background: colors[role] || '#0077B6', padding: '3px 8px', borderRadius: 5, textTransform: 'capitalize' }}>
+    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-[5px] capitalize border"
+          style={{ background: colors[role] || 'rgba(0,119,182,0.4)', color: textColors[role] || '#90E0EF', borderColor: borderColors[role] || 'rgba(0,119,182,0.6)' }}>
       {role}
     </span>
   );
 };
 
-const inpStyle = { width: '100%', padding: '9px 12px', border: '1.5px solid #90E0EF', borderRadius: 7, fontSize: 13, outline: 'none', boxSizing: 'border-box', background: '#fff' };
-
 const FormField = ({ label, children }) => (
   <div>
-    <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#0077B6', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</label>
+    <label className="block text-[11px] font-semibold text-[#90E0EF]/80 mb-1.5 uppercase tracking-wider">
+      {label}
+    </label>
     {children}
   </div>
 );

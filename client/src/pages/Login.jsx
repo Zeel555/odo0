@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ROLES } from '../utils/constants';
+import AuroraBackground from '../components/ui/AuroraBackground';
 
 const Login = () => {
   const { login, signup } = useAuth();
@@ -31,149 +32,112 @@ const Login = () => {
 
   const set = (key, val) => setForm((p) => ({ ...p, [key]: val }));
 
+  const inputCls = `w-full py-[11px] px-3.5 bg-white/[0.04] border border-white/[0.15] rounded-xl
+                    text-[13.5px] text-white placeholder-white/30 outline-none
+                    focus:border-[#00B4D8] focus:ring-1 focus:ring-[#00B4D8]/30
+                    transition-all`;
+  
+  const labelCls = "block text-[11px] font-semibold text-white/50 mb-1.5 uppercase tracking-wider";
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #F0F9FF 0%, #FFFFFF 50%, #EAF6FB 100%)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: 16, fontFamily: 'Inter, system-ui, sans-serif',
-    }}>
-      <div style={{ width: '100%', maxWidth: 420 }}>
+    <AuroraBackground>
+      <div className="min-h-screen w-full flex items-center justify-center px-4 py-10 sm:py-12">
+      <div className="w-full max-w-[420px] relative z-10">
 
         {/* Logo block */}
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{
-            width: 52, height: 52, borderRadius: 14,
-            background: '#CAF0F8', border: '1.5px solid #90E0EF',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 14px',
-          }}>
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <rect x="1.5" y="1.5" width="7.5" height="7.5" rx="1.5" stroke="#0077B6" strokeWidth="1.7"/>
-              <rect x="13" y="1.5" width="7.5" height="7.5" rx="1.5" stroke="#0077B6" strokeWidth="1.7"/>
-              <rect x="1.5" y="13" width="7.5" height="7.5" rx="1.5" stroke="#0077B6" strokeWidth="1.7"/>
-              <rect x="13" y="13" width="7.5" height="7.5" rx="1.5" stroke="#0077B6" strokeWidth="1.7"/>
+        <div className="text-center mb-8">
+          <div className="w-14 h-14 rounded-2xl bg-white/[0.04] border-[1.5px] border-white/[0.1]
+                          flex items-center justify-center mx-auto mb-4 backdrop-blur-md shadow-xl">
+            <svg width="24" height="24" viewBox="0 0 22 22" fill="none">
+              <rect x="1.5" y="1.5" width="7.5" height="7.5" rx="1.5" stroke="#00B4D8" strokeWidth="1.7"/>
+              <rect x="13" y="1.5" width="7.5" height="7.5" rx="1.5" stroke="#00B4D8" strokeWidth="1.7"/>
+              <rect x="1.5" y="13" width="7.5" height="7.5" rx="1.5" stroke="#00B4D8" strokeWidth="1.7"/>
+              <rect x="13" y="13" width="7.5" height="7.5" rx="1.5" stroke="#00B4D8" strokeWidth="1.7"/>
             </svg>
           </div>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: '#03045E' }}>RevoraX</h1>
-          <p style={{ margin: '4px 0 0', fontSize: 13, color: '#00B4D8' }}>Product Lifecycle Management</p>
+          <h1 className="m-0 text-[26px] font-bold text-white tracking-tight">RevoraX</h1>
+          <p className="m-0 mt-1.5 text-[13.5px] text-[#90E0EF] font-medium tracking-wide">Product Lifecycle Management</p>
         </div>
 
         {/* Card */}
-        <div style={{
-          background: '#FFFFFF', border: '1.5px solid #90E0EF',
-          borderRadius: 16, padding: '28px 28px 24px',
-          boxShadow: '0 4px 24px rgba(0,119,182,0.06)',
-        }}>
+        <div className="bg-white/10 backdrop-blur-2xl border border-white/20
+                        rounded-3xl p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
+          
           {/* Tabs */}
-          <div style={{
-            display: 'flex', background: '#F0F9FF', borderRadius: 9,
-            padding: 3, marginBottom: 22,
-          }}>
+          <div className="flex bg-white/[0.03] border border-white/[0.08] rounded-xl p-[5px] mb-8">
             {['login', 'signup'].map((tab) => (
               <button key={tab} onClick={() => { setMode(tab); setError(''); }}
-                style={{
-                  flex: 1, padding: '7px 0', fontSize: 13, fontWeight: 500,
-                  borderRadius: 7, border: 'none', cursor: 'pointer',
-                  background: mode === tab ? '#FFFFFF' : 'transparent',
-                  color: mode === tab ? '#03045E' : '#90E0EF',
-                  boxShadow: mode === tab ? '0 1px 4px rgba(0,119,182,0.12)' : 'none',
-                  transition: 'background 0.2s, color 0.2s',
-                }}>
+                className={`flex-1 py-2 text-[13px] font-semibold rounded-lg border-none cursor-pointer transition-all duration-300
+                            ${mode === tab 
+                              ? 'bg-white/10 text-white shadow-sm ring-1 ring-white/20' 
+                              : 'bg-transparent text-white/50 hover:text-white/80'}`}
+              >
                 {tab === 'login' ? 'Sign In' : 'Create Account'}
               </button>
             ))}
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {error && (
-              <div style={{
-                background: '#FCEBEB', border: '1px solid #A32D2D', borderRadius: 8,
-                padding: '8px 12px', fontSize: 12, color: '#791F1F',
-              }}>
+              <div className="bg-red-500/10 border border-red-500/20 rounded-xl
+                              p-3 text-[13px] text-red-300 font-medium text-center">
                 {error}
               </div>
             )}
 
             {mode === 'signup' && (
               <div>
-                <label style={{ fontSize: 12, fontWeight: 500, color: '#0077B6', display: 'block', marginBottom: 4 }}>Full Name</label>
+                <label className={labelCls}>Full Name</label>
                 <input value={form.name} onChange={(e) => set('name', e.target.value)} required
-                  placeholder="John Doe"
-                  style={{ width: '100%', border: '1.5px solid #CAF0F8', borderRadius: 8, padding: '8px 12px', fontSize: 13, color: '#03045E', outline: 'none', boxSizing: 'border-box' }}
-                  onFocus={(e) => { e.target.style.borderColor = '#0077B6'; e.target.style.boxShadow = '0 0 0 3px #EAF6FB'; }}
-                  onBlur={(e)  => { e.target.style.borderColor = '#CAF0F8'; e.target.style.boxShadow = 'none'; }}
-                />
+                  placeholder="John Doe" className={inputCls} />
               </div>
             )}
 
             <div>
-              <label style={{ fontSize: 12, fontWeight: 500, color: '#0077B6', display: 'block', marginBottom: 4 }}>Email Address</label>
+              <label className={labelCls}>Email Address</label>
               <input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} required
-                placeholder="you@company.com"
-                style={{ width: '100%', border: '1.5px solid #CAF0F8', borderRadius: 8, padding: '8px 12px', fontSize: 13, color: '#03045E', outline: 'none', boxSizing: 'border-box' }}
-                onFocus={(e) => { e.target.style.borderColor = '#0077B6'; e.target.style.boxShadow = '0 0 0 3px #EAF6FB'; }}
-                onBlur={(e)  => { e.target.style.borderColor = '#CAF0F8'; e.target.style.boxShadow = 'none'; }}
-              />
+                placeholder="you@company.com" className={inputCls} />
             </div>
 
             <div>
-              <label style={{ fontSize: 12, fontWeight: 500, color: '#0077B6', display: 'block', marginBottom: 4 }}>Password</label>
+              <label className={labelCls}>Password</label>
               <input type="password" value={form.password} onChange={(e) => set('password', e.target.value)} required minLength={6}
-                placeholder="••••••••"
-                style={{ width: '100%', border: '1.5px solid #CAF0F8', borderRadius: 8, padding: '8px 12px', fontSize: 13, color: '#03045E', outline: 'none', boxSizing: 'border-box' }}
-                onFocus={(e) => { e.target.style.borderColor = '#0077B6'; e.target.style.boxShadow = '0 0 0 3px #EAF6FB'; }}
-                onBlur={(e)  => { e.target.style.borderColor = '#CAF0F8'; e.target.style.boxShadow = 'none'; }}
-              />
+                placeholder="••••••••" className={inputCls} />
             </div>
 
             {mode === 'signup' && (
               <div>
-                <label style={{ fontSize: 12, fontWeight: 500, color: '#0077B6', display: 'block', marginBottom: 4 }}>Role</label>
+                <label className={labelCls}>Role</label>
                 <select value={form.role} onChange={(e) => set('role', e.target.value)}
-                  style={{ width: '100%', border: '1.5px solid #CAF0F8', borderRadius: 8, padding: '8px 12px', fontSize: 13, color: '#03045E', outline: 'none', background: '#FFFFFF', boxSizing: 'border-box' }}
-                  onFocus={(e) => { e.target.style.borderColor = '#0077B6'; e.target.style.boxShadow = '0 0 0 3px #EAF6FB'; }}
-                  onBlur={(e)  => { e.target.style.borderColor = '#CAF0F8'; e.target.style.boxShadow = 'none'; }}
-                >
+                  className={`${inputCls} bg-[#0a0e27]`}>
                   {Object.values(ROLES).map((r) => (
-                    <option key={r} value={r} style={{ textTransform: 'capitalize' }}>
-                      {r.charAt(0).toUpperCase() + r.slice(1)}
-                    </option>
+                    <option key={r} value={r} className="capitalize">{r}</option>
                   ))}
                 </select>
               </div>
             )}
 
-            <button type="submit" disabled={loading} style={{
-              background: loading ? '#90E0EF' : '#0077B6', color: '#FFFFFF',
-              border: 'none', borderRadius: 9, padding: '10px 0',
-              fontSize: 13, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              marginTop: 4, transition: 'background 0.18s',
-              width: '100%',
-            }}
-              onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = '#005f8e'; }}
-              onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = '#0077B6'; }}
+            <button type="submit" disabled={loading}
+              className={`mt-3 py-3.5 border-none rounded-xl font-semibold text-[14px]
+                          cursor-pointer transition-all duration-300 text-white
+                          flex items-center justify-center gap-2.5 shadow-lg
+                          ${loading ? 'bg-white/10 text-white/50 cursor-not-allowed' : 'bg-[#00B4D8] hover:bg-[#0096B4] hover:shadow-[#00B4D8]/20'}
+                        `}
             >
               {loading && (
-                <span style={{
-                  width: 14, height: 14, border: '2px solid rgba(255,255,255,0.5)',
-                  borderTopColor: '#FFF', borderRadius: '50%',
-                  animation: 'spin 0.7s linear infinite', display: 'inline-block'
-                }}/>
+                <span className="w-4 h-4 border-2 border-white/20 border-t-white/90 rounded-full animate-spin" />
               )}
               {mode === 'login' ? 'Sign In' : 'Create Account'}
             </button>
           </form>
         </div>
 
-        <p style={{ textAlign: 'center', fontSize: 11, color: '#CAF0F8', marginTop: 20 }}>
+        <p className="text-center text-[11px] text-white/30 mt-8 tracking-widest uppercase font-medium">
           RevoraX © 2026 — Internal Use Only
         </p>
       </div>
-
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
+      </div>
+    </AuroraBackground>
   );
 };
 

@@ -1,7 +1,6 @@
 /**
  * OperationsDashboard.jsx
  * Focus: READ-ONLY VIEW of active products and BOMs
- * No ECOs, no edit buttons, no approval actions
  */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -14,51 +13,47 @@ const cfg = getRoleConfig('operations');
 
 /* ── Stat Card ─────────────────────────────────────────────── */
 const StatCard = ({ label, value, icon, accent, loading }) => (
-  <div style={{
-    background: '#FFFFFF', border: `1.5px solid ${accent}33`,
-    borderRadius: 14, padding: '20px 22px',
-  }}>
-    <span style={{ fontSize: 24 }}>{icon}</span>
-    <p style={{ margin: '10px 0 2px', fontSize: 30, fontWeight: 700, color: '#0F172A' }}>
+  <div className="glass-card px-5 py-5" style={{ borderColor: `rgba(5, 150, 105, 0.3)` }}>
+    <span className="text-2xl">{icon}</span>
+    <p className="m-0 mt-2.5 mb-0.5 text-3xl font-bold text-white">
       {loading ? '…' : value}
     </p>
-    <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+    <p className="m-0 text-xs font-semibold text-white/50 uppercase tracking-wider">{label}</p>
   </div>
 );
 
 /* ── Read-only Table ────────────────────────────────────────── */
 const ReadOnlyTable = ({ columns, rows, emptyMsg, loading }) => (
-  <div style={{ background: '#FFFFFF', border: '1.5px solid #E2E8F0', borderRadius: 14, overflow: 'hidden' }}>
+  <div className="glass-card overflow-hidden">
     {/* Header */}
-    <div style={{
-      display: 'grid', gridTemplateColumns: columns.map(c => c.w || '1fr').join(' '),
-      padding: '10px 18px', background: '#F8FAFC',
-      borderBottom: '1px solid #E2E8F0',
-    }}>
+    <div className="grid bg-white/[0.04] border-b border-white/[0.08] px-[18px] py-2.5"
+         style={{ gridTemplateColumns: columns.map(c => c.w || '1fr').join(' ') }}>
       {columns.map(c => (
-        <span key={c.key} style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{c.label}</span>
+        <span key={c.key} className="text-[11px] font-bold text-white/40 uppercase tracking-wider">
+          {c.label}
+        </span>
       ))}
     </div>
 
     {loading ? (
-      <div style={{ padding: 40, textAlign: 'center' }}>
-        <div style={{ width: 20, height: 20, border: `2.5px solid ${cfg.accentBorder}`, borderTopColor: cfg.accent, borderRadius: '50%', animation: 'spin 0.7s linear infinite', margin: '0 auto' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div className="py-10 text-center">
+        <div className="w-5 h-5 border-[2.5px] rounded-full animate-spin mx-auto border-white/[0.2]"
+             style={{ borderTopColor: '#6EE7B7' }} />
       </div>
     ) : rows.length === 0 ? (
-      <div style={{ padding: '36px 24px', textAlign: 'center', fontSize: 13, color: '#94A3B8' }}>{emptyMsg}</div>
+      <div className="py-9 px-6 text-center text-[13px] text-white/40">{emptyMsg}</div>
     ) : (
       rows.map((row, i) => (
-        <div key={row._id || i} style={{
-          display: 'grid', gridTemplateColumns: columns.map(c => c.w || '1fr').join(' '),
-          padding: '12px 18px', borderBottom: i < rows.length - 1 ? '1px solid #F1F5F9' : 'none',
-          transition: 'background 0.15s',
-        }}
-          onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
-          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-        >
+        <div key={row._id || i}
+          className="grid px-[18px] py-3 hover:bg-white/[0.06] transition-colors"
+          style={{
+            gridTemplateColumns: columns.map(c => c.w || '1fr').join(' '),
+            borderBottom: i < rows.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+          }}>
           {columns.map(c => (
-            <span key={c.key} style={{ fontSize: 13, color: c.muted ? '#64748B' : '#0F172A', fontWeight: c.bold ? 500 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span key={c.key}
+              className={`text-[13px] truncate ${c.muted ? 'text-white/50' : 'text-white/90'}
+                          ${c.bold ? 'font-medium' : ''}`}>
               {c.render ? c.render(row) : row[c.key] ?? '—'}
             </span>
           ))}
@@ -84,9 +79,7 @@ const OperationsDashboard = () => {
         ]);
         setProducts((pRes.data || []).filter(p => p.status === 'Active'));
         setBoms((bRes.data || []).filter(b => b.status === 'Active'));
-      } finally {
-        setLoading(false);
-      }
+      } finally { setLoading(false); }
     };
     load();
   }, []);
@@ -97,8 +90,8 @@ const OperationsDashboard = () => {
     { key: 'name', label: 'Product Name', w: '2fr', bold: true },
     { key: 'category', label: 'Category', w: '1fr', muted: true },
     { key: 'version', label: 'Version', w: '80px', muted: true, render: r => r.version ? `v${r.version}` : '—' },
-    { key: 'status', label: 'Status', w: '90px', render: r => (
-      <span style={{ fontSize: 11, fontWeight: 600, background: '#DCFCE7', color: '#166534', padding: '2px 8px', borderRadius: 20 }}>Active</span>
+    { key: 'status', label: 'Status', w: '90px', render: () => (
+      <span className="text-[11px] font-semibold bg-green-500/20 text-green-300 px-2 py-0.5 rounded-full border border-green-500/30">Active</span>
     )},
   ];
 
@@ -106,68 +99,60 @@ const OperationsDashboard = () => {
     { key: 'name', label: 'BOM Name', w: '2fr', bold: true },
     { key: 'product', label: 'Product', w: '1fr', muted: true, render: r => r.product?.name || '—' },
     { key: 'version', label: 'Version', w: '80px', muted: true, render: r => r.version ? `v${r.version}` : '—' },
-    { key: 'status', label: 'Status', w: '90px', render: r => (
-      <span style={{ fontSize: 11, fontWeight: 600, background: '#DCFCE7', color: '#166534', padding: '2px 8px', borderRadius: 20 }}>Active</span>
+    { key: 'status', label: 'Status', w: '90px', render: () => (
+      <span className="text-[11px] font-semibold bg-green-500/20 text-green-300 px-2 py-0.5 rounded-full border border-green-500/30">Active</span>
     )},
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+    <div className="flex flex-col gap-7">
 
       {/* Header */}
       <div>
-        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#0F172A' }}>
+        <h2 className="m-0 text-[22px] font-bold text-white/90">
           Good {greeting}, {currentUser?.name?.split(' ')[0]} 👋
         </h2>
-        <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748B' }}>
+        <p className="m-0 mt-1 text-[13px] text-white/50">
           Operations view — read-only access to active products and bill of materials.
         </p>
       </div>
 
       {/* Read-only banner */}
-      <div style={{
-        background: cfg.accentLight, border: `1px solid ${cfg.accentBorder}`,
-        borderRadius: 10, padding: '10px 16px',
-        display: 'flex', alignItems: 'center', gap: 10,
-      }}>
-        <span style={{ fontSize: 16 }}>👁️</span>
-        <p style={{ margin: 0, fontSize: 12, color: cfg.accent, fontWeight: 500 }}>
+      <div className="flex items-center gap-2.5 rounded-[10px] px-4 py-2.5 bg-green-500/10 border border-green-500/30">
+        <span className="text-base">👁️</span>
+        <p className="m-0 text-xs font-medium text-green-300">
           Read-only mode — you can view all active records but cannot make changes.
         </p>
       </div>
 
       {/* Stat Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14 }}>
-        <StatCard label="Active Products" value={products.length} icon="📦" accent={cfg.accent} loading={loading} />
-        <StatCard label="Active BOMs" value={boms.length} icon="🔧" accent="#0077B6" loading={loading} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <StatCard label="Active Products" value={products.length} icon="📦" accent="#10B981" loading={loading} />
+        <StatCard label="Active BOMs" value={boms.length} icon="🔧" accent="#00B4D8" loading={loading} />
       </div>
 
       {/* Products Table */}
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#0F172A' }}>Active Products</h3>
-          <Link to="/products" style={{ fontSize: 12, color: cfg.accent, textDecoration: 'none', fontWeight: 500 }}>View all →</Link>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="m-0 text-sm font-bold text-white/90">Active Products</h3>
+          <Link to="/products" className="text-xs font-medium no-underline text-green-400 hover:text-green-300 transition-colors">
+            View all →
+          </Link>
         </div>
-        <ReadOnlyTable
-          columns={productCols}
-          rows={products.slice(0, 8)}
-          emptyMsg="No active products found."
-          loading={loading}
-        />
+        <ReadOnlyTable columns={productCols} rows={products.slice(0, 8)}
+                       emptyMsg="No active products found." loading={loading} />
       </div>
 
       {/* BOMs Table */}
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#0F172A' }}>Active Bills of Materials</h3>
-          <Link to="/bom" style={{ fontSize: 12, color: cfg.accent, textDecoration: 'none', fontWeight: 500 }}>View all →</Link>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="m-0 text-sm font-bold text-white/90">Active Bills of Materials</h3>
+          <Link to="/bom" className="text-xs font-medium no-underline text-green-400 hover:text-green-300 transition-colors">
+            View all →
+          </Link>
         </div>
-        <ReadOnlyTable
-          columns={bomCols}
-          rows={boms.slice(0, 8)}
-          emptyMsg="No active BOMs found."
-          loading={loading}
-        />
+        <ReadOnlyTable columns={bomCols} rows={boms.slice(0, 8)}
+                       emptyMsg="No active BOMs found." loading={loading} />
       </div>
     </div>
   );

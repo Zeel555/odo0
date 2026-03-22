@@ -49,15 +49,17 @@ const ECOList = () => {
 
   const ecoTypeColor = { Product: 'teal', BoM: 'blue' };
 
-  if (loading) return <div style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#90E0EF', fontSize: 13 }}>Loading ECOs…</div>;
-  if (error) return <div style={{ color: '#A32D2D', padding: 16, fontSize: 13 }}>{error}</div>;
+  if (loading) return (
+    <div className="h-40 flex items-center justify-center text-plm-frost text-[13px]">Loading ECOs…</div>
+  );
+  if (error) return <div className="text-red-700 p-4 text-[13px]">{error}</div>;
 
   return (
-    <div className="page-content" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div className="page-content flex flex-col gap-4">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#03045E' }}>Engineering Change Orders</h2>
-          <p style={{ margin: '2px 0 0', fontSize: 12, color: '#90E0EF' }}>{ecos.length} total</p>
+          <h2 className="m-0 text-[15px] font-semibold text-white/90">Engineering Change Orders</h2>
+          <p className="m-0 mt-0.5 text-xs text-white/50">{ecos.length} total</p>
         </div>
         {canCreateECO(role) && (
           <Button onClick={() => navigate('/eco/new')}>+ New ECO</Button>
@@ -79,20 +81,22 @@ const ECOList = () => {
 
             return (
               <Table.Row key={e._id} onClick={() => navigate(`/eco/${e._id}`)}>
-                <Table.Cell><span style={{ fontWeight: 500, color: '#03045E' }}>{e.title}</span></Table.Cell>
+                <Table.Cell><span className="font-medium text-white/90">{e.title}</span></Table.Cell>
                 <Table.Cell><Badge color={ecoTypeColor[e.ecoType] || 'gray'}>{e.ecoType}</Badge></Table.Cell>
                 <Table.Cell>{e.product?.name || '—'}</Table.Cell>
-                <Table.Cell><span style={{ fontWeight: 600, color: '#0077B6', fontSize: 12 }}>{e.stage}</span></Table.Cell>
+                <Table.Cell>
+                  <span className="font-semibold text-[#90E0EF] text-xs px-2 py-0.5 rounded bg-white/[0.08]">{e.stage}</span>
+                </Table.Cell>
                 <Table.Cell><StatusBadge status={e.status} /></Table.Cell>
                 <Table.Cell>{e.user?.name || '—'}</Table.Cell>
                 <Table.Cell>{formatDate(e.createdAt)}</Table.Cell>
                 <Table.Cell>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }} onClick={(ev) => ev.stopPropagation()}>
-                    <Link to={`/eco/${e._id}`} style={{ textDecoration: 'none' }}>
+                  <div className="flex flex-wrap gap-1.5" onClick={(ev) => ev.stopPropagation()}>
+                    <Link to={`/eco/${e._id}`} className="no-underline">
                       <Button size="sm" variant="secondary">View</Button>
                     </Link>
                     {showEdit && (
-                      <Link to={`/eco/${e._id}/edit`} style={{ textDecoration: 'none' }}>
+                      <Link to={`/eco/${e._id}/edit`} className="no-underline">
                         <Button size="sm" variant="secondary">Edit</Button>
                       </Link>
                     )}

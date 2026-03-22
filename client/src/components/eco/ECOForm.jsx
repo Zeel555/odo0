@@ -7,8 +7,7 @@ import { useBOM } from '../../hooks/useBOM';
 import { ECO_TYPES } from '../../utils/constants';
 
 /**
- * ECOForm — create/edit ECO with dynamic proposedChanges section.
- * Product ECO: shows field inputs. BoM ECO: shows component/operation editor.
+ * ECOForm — glassmorphism dark theme adaptation.
  */
 const ECOForm = () => {
   const { id } = useParams();
@@ -142,48 +141,52 @@ const ECOForm = () => {
     return pid && (b.product?._id === pid || b.product === pid) && b.status === 'Active';
   });
 
+  const inputClass = "w-full border border-white/[0.15] bg-white/[0.04] text-white placeholder-white/30 rounded-lg px-3 py-2.5 text-[13px] focus:outline-none focus:border-[#00B4D8] focus:ring-1 focus:ring-[#00B4D8]/30 transition-all";
+  const selectClass = "w-full border border-white/[0.15] bg-[#0a0e27] text-white rounded-lg px-3 py-2.5 text-[13px] focus:outline-none focus:border-[#00B4D8] focus:ring-1 focus:ring-[#00B4D8]/30 transition-all";
+  const labelClass = "block text-[11px] font-semibold text-[#90E0EF]/80 mb-1.5 uppercase tracking-wider";
+
   return (
     <div className="max-w-2xl space-y-6">
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-gray-600 text-lg">←</button>
-        <h2 className="text-lg font-semibold text-gray-900">{isEdit ? 'Edit ECO' : 'New Engineering Change Order'}</h2>
+        <button type="button" onClick={() => navigate(-1)} className="bg-transparent border-none cursor-pointer text-lg text-white/50 hover:text-white transition-colors">←</button>
+        <h2 className="m-0 text-base font-semibold text-white/90">{isEdit ? 'Edit ECO' : 'New Engineering Change Order'}</h2>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {error && <p className="text-[13px] text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg m-0">{error}</p>}
 
         {/* Basic Info */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4">
-          <h3 className="text-sm font-semibold text-gray-900">Basic Info</h3>
+        <div className="glass-card p-5 space-y-4">
+          <h3 className="m-0 text-[13px] font-semibold text-white/90">Basic Info</h3>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+            <label className={labelClass}>Title *</label>
             <input value={form.title} onChange={(e) => setField('title', e.target.value)} required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              className={inputClass}
               placeholder="e.g. Increase screw quantity in BOM v1"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">ECO Type *</label>
+              <label className={labelClass}>ECO Type *</label>
               <select value={form.ecoType} onChange={(e) => setField('ecoType', e.target.value)} disabled={isEdit}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                className={selectClass}>
                 {Object.values(ECO_TYPES).map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Effective Date</label>
+              <label className={labelClass}>Effective Date</label>
               <input type="date" value={form.effectiveDate} onChange={(e) => setField('effectiveDate', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                className={`${inputClass} [color-scheme:dark]`}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Product *</label>
+            <label className={labelClass}>Product *</label>
             <select value={form.product} onChange={(e) => { setField('product', e.target.value); setField('bom', ''); }} required disabled={isEdit}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              className={selectClass}>
               <option value="">Select product…</option>
               {products.filter((p) => p.status === 'Active').map((p) => (
                 <option key={p._id} value={p._id}>{p.name} ({p.version})</option>
@@ -193,9 +196,9 @@ const ECOForm = () => {
 
           {form.ecoType === ECO_TYPES.BOM && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">BOM *</label>
+              <label className={labelClass}>BOM *</label>
               <select value={form.bom} onChange={(e) => setField('bom', e.target.value)} required
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                className={selectClass}>
                 <option value="">Select BOM…</option>
                 {selectedProductBOMs.map((b) => (
                   <option key={b._id} value={b._id}>BOM {b.version}</option>
@@ -204,36 +207,47 @@ const ECOForm = () => {
             </div>
           )}
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 pt-2">
             <input type="checkbox" id="versionUpdate" checked={form.versionUpdate}
               onChange={(e) => setField('versionUpdate', e.target.checked)}
-              className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+              className="w-4 h-4 text-[#00B4D8] border-white/[0.15] bg-white/[0.04] rounded focus:ring-[#00B4D8]"
             />
-            <label htmlFor="versionUpdate" className="text-sm font-medium text-gray-700">
+            <label htmlFor="versionUpdate" className="text-[13px] text-white/80 cursor-pointer">
               Create new version on apply (otherwise patch in-place)
             </label>
           </div>
 
-          <FieldInput
-            label="ECO attachment URLs (comma-separated, optional)"
-            value={ecoAttachments}
-            onChange={setEcoAttachments}
-            placeholder="https://..., spec.pdf"
-          />
+          <div className="pt-2">
+            <label className={labelClass}>ECO attachment URLs (comma-separated, optional)</label>
+            <input value={ecoAttachments} onChange={(e) => setEcoAttachments(e.target.value)}
+                   className={inputClass} placeholder="https://..., spec.pdf" />
+          </div>
         </div>
 
         {/* Proposed Changes */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4">
-          <h3 className="text-sm font-semibold text-gray-900">Proposed Changes</h3>
+        <div className="glass-card p-5 space-y-4">
+          <h3 className="m-0 text-[13px] font-semibold text-white/90">Proposed Changes</h3>
 
           {form.ecoType === ECO_TYPES.PRODUCT ? (
-            <div className="space-y-3">
-              <FieldInput label="New Name" value={proposedP.name} onChange={(v) => setProposedP((p) => ({ ...p, name: v }))} placeholder="Leave blank to keep current" />
-              <div className="grid grid-cols-2 gap-3">
-                <FieldInput label="New Sale Price" type="number" value={proposedP.salePrice} onChange={(v) => setProposedP((p) => ({ ...p, salePrice: v }))} placeholder="e.g. 1099" />
-                <FieldInput label="New Cost Price" type="number" value={proposedP.costPrice} onChange={(v) => setProposedP((p) => ({ ...p, costPrice: v }))} placeholder="e.g. 550" />
+            <div className="space-y-4">
+              <div>
+                <label className={labelClass}>New Name</label>
+                <input value={proposedP.name} onChange={(e) => setProposedP((p) => ({ ...p, name: e.target.value }))} className={inputClass} placeholder="Leave blank to keep current" />
               </div>
-              <FieldInput label="New Attachments (comma-separated)" value={proposedP.attachments} onChange={(v) => setProposedP((p) => ({ ...p, attachments: v }))} placeholder="file1.pdf, spec.docx" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>New Sale Price</label>
+                  <input type="number" value={proposedP.salePrice} onChange={(e) => setProposedP((p) => ({ ...p, salePrice: e.target.value }))} className={inputClass} placeholder="e.g. 1099" />
+                </div>
+                <div>
+                  <label className={labelClass}>New Cost Price</label>
+                  <input type="number" value={proposedP.costPrice} onChange={(e) => setProposedP((p) => ({ ...p, costPrice: e.target.value }))} className={inputClass} placeholder="e.g. 550" />
+                </div>
+              </div>
+              <div>
+                <label className={labelClass}>New Attachments (comma-separated)</label>
+                <input value={proposedP.attachments} onChange={(e) => setProposedP((p) => ({ ...p, attachments: e.target.value }))} className={inputClass} placeholder="file1.pdf, spec.docx" />
+              </div>
             </div>
           ) : (
             <BOMProposedEditor
@@ -242,6 +256,8 @@ const ECOForm = () => {
               setComponents={setProposedComponents}
               operations={proposedOperations}
               setOperations={setProposedOperations}
+              inputClass={inputClass}
+              selectClass={selectClass}
             />
           )}
         </div>
@@ -255,16 +271,7 @@ const ECOForm = () => {
   );
 };
 
-const FieldInput = ({ label, value, onChange, type = 'text', placeholder }) => (
-  <div>
-    <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
-    <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
-      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-    />
-  </div>
-);
-
-const BOMProposedEditor = ({ products, components, setComponents, operations, setOperations }) => {
+const BOMProposedEditor = ({ products, components, setComponents, operations, setOperations, inputClass, selectClass }) => {
   const addComp = () => setComponents((p) => [...p, { product: '', quantity: 1 }]);
   const removeComp = (i) => setComponents((p) => p.filter((_, idx) => idx !== i));
   const updateComp = (i, k, v) => setComponents((p) => { const n = [...p]; n[i] = { ...n[i], [k]: v }; return n; });
@@ -274,41 +281,47 @@ const BOMProposedEditor = ({ products, components, setComponents, operations, se
   const updateOp = (i, k, v) => setOperations((p) => { const n = [...p]; n[i] = { ...n[i], [k]: v }; return n; });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div>
-        <div className="flex justify-between mb-2">
-          <p className="text-xs font-medium text-gray-600">Components</p>
-          <button type="button" onClick={addComp} className="text-xs text-indigo-600 hover:underline">+ Add</button>
+        <div className="flex justify-between mb-3 border-b border-white/[0.08] pb-2">
+          <p className="m-0 text-[13px] font-semibold text-white/80">Components</p>
+          <button type="button" onClick={addComp} className="bg-transparent border-none text-[13px] text-[#90E0EF] cursor-pointer hover:underline p-0">+ Add</button>
         </div>
-        {components.map((c, i) => (
-          <div key={i} className="flex gap-2 mb-2">
-            <select value={c.product} onChange={(e) => updateComp(i, 'product', e.target.value)}
-              className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-              <option value="">Select component…</option>
-              {products.map((p) => <option key={p._id} value={p._id}>{p.name} ({p.version})</option>)}
-            </select>
-            <input type="number" min="0" value={c.quantity} onChange={(e) => updateComp(i, 'quantity', Number(e.target.value))}
-              className="w-20 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Qty" />
-            <button type="button" onClick={() => removeComp(i)} className="text-red-400 hover:text-red-600">×</button>
-          </div>
-        ))}
+        <div className="space-y-3">
+          {components.map((c, i) => (
+            <div key={i} className="flex gap-2.5">
+              <select value={c.product} onChange={(e) => updateComp(i, 'product', e.target.value)}
+                className={`flex-1 ${selectClass}`}>
+                <option value="">Select component…</option>
+                {products.map((p) => <option key={p._id} value={p._id}>{p.name} ({p.version})</option>)}
+              </select>
+              <input type="number" min="0" value={c.quantity} onChange={(e) => updateComp(i, 'quantity', Number(e.target.value))}
+                className={`w-24 ${inputClass}`} placeholder="Qty" />
+              <button type="button" onClick={() => removeComp(i)} className="bg-transparent border-none text-red-400 hover:text-red-300 px-2 text-lg cursor-pointer">×</button>
+            </div>
+          ))}
+          {components.length === 0 && <p className="m-0 text-[13px] text-white/40">No components added.</p>}
+        </div>
       </div>
       <div>
-        <div className="flex justify-between mb-2">
-          <p className="text-xs font-medium text-gray-600">Operations</p>
-          <button type="button" onClick={addOp} className="text-xs text-indigo-600 hover:underline">+ Add</button>
+        <div className="flex justify-between mb-3 border-b border-white/[0.08] pb-2">
+          <p className="m-0 text-[13px] font-semibold text-white/80">Operations</p>
+          <button type="button" onClick={addOp} className="bg-transparent border-none text-[13px] text-[#90E0EF] cursor-pointer hover:underline p-0">+ Add</button>
         </div>
-        {operations.map((o, i) => (
-          <div key={i} className="flex gap-2 mb-2">
-            <input value={o.name} onChange={(e) => updateOp(i, 'name', e.target.value)} placeholder="Operation name"
-              className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-            <input type="number" min="0" value={o.duration} onChange={(e) => updateOp(i, 'duration', Number(e.target.value))} placeholder="Mins"
-              className="w-16 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-            <input value={o.workCenter} onChange={(e) => updateOp(i, 'workCenter', e.target.value)} placeholder="Work center"
-              className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-            <button type="button" onClick={() => removeOp(i)} className="text-red-400 hover:text-red-600">×</button>
-          </div>
-        ))}
+        <div className="space-y-3">
+          {operations.map((o, i) => (
+            <div key={i} className="flex gap-2.5">
+              <input value={o.name} onChange={(e) => updateOp(i, 'name', e.target.value)} placeholder="Operation name"
+                className={`flex-1 ${inputClass}`} />
+              <input type="number" min="0" value={o.duration} onChange={(e) => updateOp(i, 'duration', Number(e.target.value))} placeholder="Mins"
+                className={`w-20 ${inputClass}`} />
+              <input value={o.workCenter} onChange={(e) => updateOp(i, 'workCenter', e.target.value)} placeholder="Work center"
+                className={`flex-1 ${inputClass}`} />
+              <button type="button" onClick={() => removeOp(i)} className="bg-transparent border-none text-red-400 hover:text-red-300 px-2 text-lg cursor-pointer">×</button>
+            </div>
+          ))}
+          {operations.length === 0 && <p className="m-0 text-[13px] text-white/40">No operations added.</p>}
+        </div>
       </div>
     </div>
   );

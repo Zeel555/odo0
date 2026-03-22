@@ -5,8 +5,7 @@ import { useBOM } from '../../hooks/useBOM';
 import { useProducts } from '../../hooks/useProducts';
 
 /**
- * BOMForm — create or edit a Bill of Materials.
- * Components are selected from product dropdown with quantity input.
+ * BOMForm — glassmorphism dark theme adaptation.
  */
 const BOMForm = () => {
   const { id } = useParams();
@@ -72,23 +71,27 @@ const BOMForm = () => {
 
   const activeProducts = products.filter((p) => p.status === 'Active');
 
+  const inputClass = "w-full border border-white/[0.15] bg-white/[0.04] text-white placeholder-white/30 rounded-lg px-3 py-2.5 text-[13px] focus:outline-none focus:border-[#00B4D8] focus:ring-1 focus:ring-[#00B4D8]/30 transition-all";
+  const selectClass = "w-full border border-white/[0.15] bg-[#0a0e27] text-white rounded-lg px-3 py-2.5 text-[13px] focus:outline-none focus:border-[#00B4D8] focus:ring-1 focus:ring-[#00B4D8]/30 transition-all";
+  const labelClass = "block text-[11px] font-semibold text-[#90E0EF]/80 mb-1.5 uppercase tracking-wider";
+
   return (
     <div className="max-w-2xl space-y-6">
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-gray-600 text-lg">←</button>
-        <h2 className="text-lg font-semibold text-gray-900">{isEdit ? 'Edit BOM' : 'New Bill of Materials'}</h2>
+        <button type="button" onClick={() => navigate(-1)} className="bg-transparent border-none cursor-pointer text-lg text-white/50 hover:text-white transition-colors">←</button>
+        <h2 className="m-0 text-base font-semibold text-white/90">{isEdit ? 'Edit BOM' : 'New Bill of Materials'}</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+        {error && <p className="text-[13px] text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg m-0">{error}</p>}
 
         {/* Product */}
         {!isEdit && (
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Parent Product *</label>
+          <div className="glass-card p-5">
+            <label className={labelClass}>Parent Product *</label>
             <select
               value={productId} onChange={(e) => setProductId(e.target.value)} required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              className={selectClass}
             >
               <option value="">Select product…</option>
               {activeProducts.map((p) => (
@@ -99,18 +102,18 @@ const BOMForm = () => {
         )}
 
         {/* Components */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+        <div className="glass-card p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-900">Components</h3>
-            <Button type="button" size="sm" variant="secondary" onClick={addComponent}>+ Add</Button>
+            <h3 className="m-0 text-[13px] font-semibold text-white/90">Components</h3>
+            <Button type="button" size="sm" variant="secondary" onClick={addComponent}>+ Add Component</Button>
           </div>
           <div className="space-y-3">
             {components.map((comp, i) => (
-              <div key={i} className="flex gap-2 items-center">
+              <div key={i} className="flex gap-2.5 items-center">
                 <select
                   value={comp.product}
                   onChange={(e) => updateComponent(i, 'product', e.target.value)}
-                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className={`flex-1 ${selectClass}`}
                 >
                   <option value="">Select component…</option>
                   {products.map((p) => (
@@ -121,45 +124,47 @@ const BOMForm = () => {
                   type="number" min="0" step="1"
                   value={comp.quantity}
                   onChange={(e) => updateComponent(i, 'quantity', Number(e.target.value))}
-                  className="w-24 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className={`w-28 ${inputClass}`}
                   placeholder="Qty"
                 />
                 <button type="button" onClick={() => removeComponent(i)}
-                  className="text-red-400 hover:text-red-600 px-2 text-lg">×</button>
+                  className="bg-transparent border-none cursor-pointer text-red-400 hover:text-red-300 px-2 text-lg transition-colors">×</button>
               </div>
             ))}
+            {components.length === 0 && <p className="m-0 text-[13px] text-white/40">No components added.</p>}
           </div>
         </div>
 
         {/* Operations */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+        <div className="glass-card p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-900">Operations</h3>
-            <Button type="button" size="sm" variant="secondary" onClick={addOperation}>+ Add</Button>
+            <h3 className="m-0 text-[13px] font-semibold text-white/90">Operations</h3>
+            <Button type="button" size="sm" variant="secondary" onClick={addOperation}>+ Add Operation</Button>
           </div>
           <div className="space-y-3">
             {operations.map((op, i) => (
-              <div key={i} className="flex gap-2 items-center">
+              <div key={i} className="flex gap-2.5 items-center">
                 <input
                   value={op.name} onChange={(e) => updateOperation(i, 'name', e.target.value)}
                   placeholder="Operation name"
-                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className={`flex-1 ${inputClass}`}
                 />
                 <input
                   type="number" min="0" value={op.duration}
                   onChange={(e) => updateOperation(i, 'duration', Number(e.target.value))}
                   placeholder="Mins"
-                  className="w-20 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className={`w-24 ${inputClass}`}
                 />
                 <input
                   value={op.workCenter} onChange={(e) => updateOperation(i, 'workCenter', e.target.value)}
                   placeholder="Work center"
-                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className={`flex-1 ${inputClass}`}
                 />
                 <button type="button" onClick={() => removeOperation(i)}
-                  className="text-red-400 hover:text-red-600 px-2 text-lg">×</button>
+                  className="bg-transparent border-none cursor-pointer text-red-400 hover:text-red-300 px-2 text-lg transition-colors">×</button>
               </div>
             ))}
+            {operations.length === 0 && <p className="m-0 text-[13px] text-white/40">No operations added.</p>}
           </div>
         </div>
 

@@ -1,28 +1,14 @@
 /**
- * Table — white card with RevoraX-styled thead, tbody rows.
+ * Table — glass-card with dark theme styling.
  */
 const Table = ({ headers = [], children, emptyMessage = 'No records found.' }) => (
-  <div style={{
-    background: '#FFFFFF',
-    border: '1.5px solid #90E0EF',
-    borderRadius: 12,
-    overflow: 'hidden',
-  }}>
-    <div style={{ overflowX: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+  <div className="glass-card overflow-hidden">
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse text-[13px] text-left">
         <thead>
           <tr>
             {headers.map((h, i) => (
-              <th key={i} style={{
-                background: '#EAF6FB',
-                color: '#0077B6',
-                fontSize: 12,
-                fontWeight: 600,
-                padding: '9px 14px',
-                borderBottom: '1.5px solid #90E0EF',
-                textAlign: 'left',
-                whiteSpace: 'nowrap',
-              }}>
+              <th key={i} className="px-3.5 py-2.5 bg-white/[0.04] border-b border-white/[0.08] text-xs font-semibold text-white/50 uppercase tracking-wider whitespace-nowrap">
                 {h}
               </th>
             ))}
@@ -31,10 +17,7 @@ const Table = ({ headers = [], children, emptyMessage = 'No records found.' }) =
         <tbody>
           {children || (
             <tr>
-              <td colSpan={headers.length} style={{
-                padding: '40px 14px', textAlign: 'center',
-                color: '#90E0EF', fontSize: 13,
-              }}>
+              <td colSpan={headers.length} className="px-[14px] py-10 text-center text-[13px] text-white/30">
                 {emptyMessage}
               </td>
             </tr>
@@ -48,22 +31,14 @@ const Table = ({ headers = [], children, emptyMessage = 'No records found.' }) =
 Table.Row = ({ children, onClick, className = '' }) => (
   <tr
     onClick={onClick}
-    style={{ cursor: onClick ? 'pointer' : undefined }}
-    onMouseEnter={(e) => { if (onClick || true) Array.from(e.currentTarget.cells).forEach(c => c.style.background = '#F5FBFF'); }}
-    onMouseLeave={(e) => { Array.from(e.currentTarget.cells).forEach(c => c.style.background = ''); }}
+    className={`group border-b border-white/[0.05] last:border-none transition-colors duration-150 ${onClick ? 'cursor-pointer hover:bg-white/[0.06]' : ''} ${className}`}
   >
     {children}
   </tr>
 );
 
 Table.Cell = ({ children, className = '' }) => (
-  <td style={{
-    padding: '9px 14px',
-    borderBottom: '1px solid #CAF0F8',
-    color: '#03045E',
-    fontSize: 13,
-    transition: 'background 0.15s',
-  }}>
+  <td className={`px-3.5 py-2.5 text-[13px] text-white/80 transition-colors ${className}`}>
     {children}
   </td>
 );

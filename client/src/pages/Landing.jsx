@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import AuroraBackground from '../components/ui/AuroraBackground';
 
 /**
- * Landing — public entry point.
+ * Landing — public entry point with AuroraBackground.
  * Left: Create Company. Right: Login to existing account.
  */
 const Landing = () => {
@@ -29,100 +30,110 @@ const Landing = () => {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh', background: 'linear-gradient(135deg, #F0F9FF 0%, #EAF6FB 100%)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontFamily: "'Inter', sans-serif", padding: 24,
-    }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1px 1fr', gap: 0, maxWidth: 860, width: '100%', background: '#fff', borderRadius: 20, boxShadow: '0 8px 40px rgba(0,119,182,0.12)', border: '1.5px solid #90E0EF', overflow: 'hidden' }}>
+    <AuroraBackground>
+      <div className="min-h-screen w-full flex items-center justify-center px-4 py-10 sm:py-12">
+        <div className="w-full max-w-[860px]">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_1px_1fr] bg-white/10 backdrop-blur-xl
+                        rounded-2xl border border-white/20 shadow-2xl overflow-hidden">
 
-        {/* Left — Create Company */}
-        <div style={{ padding: '48px 40px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <rect width="14" height="14" rx="3" fill="#0077B6"/>
-              <rect x="18" width="14" height="14" rx="3" fill="#00B4D8"/>
-              <rect y="18" width="14" height="14" rx="3" fill="#48CAE4"/>
-              <rect x="18" y="18" width="14" height="14" rx="3" fill="#90E0EF"/>
-            </svg>
-            <span style={{ fontWeight: 700, fontSize: 18, color: '#03045E' }}>RevoraX</span>
+          {/* Left — Create Company */}
+          <div className="p-10 md:p-12 flex flex-col gap-5">
+            {/* Logo */}
+            <div className="flex items-center gap-2.5 mb-2">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <rect width="14" height="14" rx="3" fill="#0077B6"/>
+                <rect x="18" width="14" height="14" rx="3" fill="#00B4D8"/>
+                <rect y="18" width="14" height="14" rx="3" fill="#48CAE4"/>
+                <rect x="18" y="18" width="14" height="14" rx="3" fill="#90E0EF"/>
+              </svg>
+              <span className="font-bold text-lg text-white">RevoraX</span>
+            </div>
+
+            <div>
+              <h1 className="m-0 text-[22px] font-bold text-white">Start your workspace</h1>
+              <p className="m-0 mt-1.5 text-sm text-white/50">
+                Create a company account and invite your team.
+              </p>
+            </div>
+
+            <Link to="/create-company" className="no-underline">
+              <button className="w-full py-3.5 px-5 bg-plm-ocean text-white border-none rounded-xl
+                                 font-semibold text-sm cursor-pointer
+                                 hover:bg-[#023E8A] transition-colors">
+                🏢 Create Company Account
+              </button>
+            </Link>
+
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl
+                            p-4 text-xs text-white/70 leading-relaxed">
+              <strong className="text-white/90">What you get:</strong><br />
+              ✓ Full ECO workflow management<br />
+              ✓ Products & BOM versioning<br />
+              ✓ Team invites with role-based access<br />
+              ✓ Isolated company data
+            </div>
           </div>
 
-          <div>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#03045E' }}>Start your workspace</h1>
-            <p style={{ margin: '6px 0 0', fontSize: 13, color: '#90E0EF' }}>
-              Create a company account and invite your team.
-            </p>
-          </div>
+          {/* Divider */}
+          <div className="hidden md:block bg-white/20" />
 
-          <Link to="/create-company" style={{ textDecoration: 'none' }}>
-            <button style={{
-              width: '100%', padding: '13px 20px', background: '#0077B6', color: '#fff',
-              border: 'none', borderRadius: 10, fontWeight: 600, fontSize: 14, cursor: 'pointer',
-              transition: 'background 0.2s',
-            }}
-              onMouseOver={(e) => e.target.style.background = '#023E8A'}
-              onMouseOut={(e) => e.target.style.background = '#0077B6'}
-            >
-              🏢 Create Company Account
-            </button>
-          </Link>
+          {/* Right — Login */}
+          <div className="p-10 md:p-12 flex flex-col gap-5">
+            <div>
+              <h2 className="m-0 text-xl font-bold text-white">Welcome back</h2>
+              <p className="m-0 mt-1.5 text-sm text-white/50">Sign in to your company workspace.</p>
+            </div>
 
-          <div style={{ background: '#EAF6FB', borderRadius: 10, padding: '14px 16px', fontSize: 12, color: '#0077B6', lineHeight: 1.6 }}>
-            <strong>What you get:</strong><br />
-            ✓ Full ECO workflow management<br />
-            ✓ Products & BOM versioning<br />
-            ✓ Team invites with role-based access<br />
-            ✓ Isolated company data
+            <form onSubmit={handleLogin} className="flex flex-col gap-3.5">
+              {loginError && (
+                <div className="bg-red-500/20 border border-red-400/50 rounded-lg px-3.5 py-2.5
+                                text-sm text-red-200">
+                  {loginError}
+                </div>
+              )}
+              <div>
+                <label className="block text-[11px] font-semibold text-white/60 mb-1.5
+                                  uppercase tracking-wider">Email</label>
+                <input
+                  type="email" required value={loginForm.email}
+                  onChange={(e) => setLoginForm(f => ({ ...f, email: e.target.value }))}
+                  placeholder="you@company.com"
+                  className="w-full py-3 px-3.5 bg-white/10 border border-white/20 rounded-lg
+                             text-sm text-white placeholder-white/30 outline-none
+                             focus:border-plm-surf focus:ring-1 focus:ring-plm-surf/30
+                             transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-white/60 mb-1.5
+                                  uppercase tracking-wider">Password</label>
+                <input
+                  type="password" required value={loginForm.password}
+                  onChange={(e) => setLoginForm(f => ({ ...f, password: e.target.value }))}
+                  placeholder="••••••••"
+                  className="w-full py-3 px-3.5 bg-white/10 border border-white/20 rounded-lg
+                             text-sm text-white placeholder-white/30 outline-none
+                             focus:border-plm-surf focus:ring-1 focus:ring-plm-surf/30
+                             transition-colors"
+                />
+              </div>
+              <button
+                type="submit" disabled={loginLoading}
+                className={`w-full py-3.5 border-none rounded-xl font-semibold text-sm
+                            cursor-pointer transition-colors text-white
+                            ${loginLoading
+                              ? 'bg-plm-frost/50 cursor-not-allowed'
+                              : 'bg-[#023E8A] hover:bg-plm-deep'
+                            }`}
+              >
+                {loginLoading ? 'Signing in…' : 'Sign In →'}
+              </button>
+            </form>
           </div>
         </div>
-
-        {/* Divider */}
-        <div style={{ background: '#CAF0F8' }} />
-
-        {/* Right — Login */}
-        <div style={{ padding: '48px 40px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div>
-            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#03045E' }}>Welcome back</h2>
-            <p style={{ margin: '6px 0 0', fontSize: 13, color: '#90E0EF' }}>Sign in to your company workspace.</p>
-          </div>
-
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {loginError && (
-              <div style={{ background: '#FCEBEB', border: '1px solid #F28B82', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#A32D2D' }}>
-                {loginError}
-              </div>
-            )}
-            <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#0077B6', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email</label>
-              <input
-                type="email" required value={loginForm.email}
-                onChange={(e) => setLoginForm(f => ({ ...f, email: e.target.value }))}
-                placeholder="you@company.com"
-                style={{ width: '100%', padding: '11px 14px', border: '1.5px solid #90E0EF', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box', background: '#FAFEFF' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#0077B6', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Password</label>
-              <input
-                type="password" required value={loginForm.password}
-                onChange={(e) => setLoginForm(f => ({ ...f, password: e.target.value }))}
-                placeholder="••••••••"
-                style={{ width: '100%', padding: '11px 14px', border: '1.5px solid #90E0EF', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box', background: '#FAFEFF' }}
-              />
-            </div>
-            <button type="submit" disabled={loginLoading} style={{
-              width: '100%', padding: '13px', background: loginLoading ? '#90E0EF' : '#023E8A',
-              color: '#fff', border: 'none', borderRadius: 10, fontWeight: 600, fontSize: 14,
-              cursor: loginLoading ? 'not-allowed' : 'pointer', transition: 'background 0.2s',
-            }}>
-              {loginLoading ? 'Signing in…' : 'Sign In →'}
-            </button>
-          </form>
         </div>
       </div>
-    </div>
+    </AuroraBackground>
   );
 };
 

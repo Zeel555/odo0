@@ -16,18 +16,19 @@ const ProductList = () => {
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
-  if (loading) return <div style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#90E0EF', fontSize: 13 }}>Loading products…</div>;
-  if (error) return <div style={{ color: '#A32D2D', padding: 16, fontSize: 13 }}>{error}</div>;
+  if (loading) return (
+    <div className="h-40 flex items-center justify-center text-plm-frost text-[13px]">Loading products…</div>
+  );
+  if (error) return <div className="text-red-700 p-4 text-[13px]">{error}</div>;
 
-  // Operations can only see Active products
   const displayProducts = opsMode ? products.filter((p) => p.status === 'Active') : products;
 
   return (
-    <div className="page-content" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div className="page-content flex flex-col gap-4">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#03045E' }}>Products</h2>
-          <p style={{ margin: '2px 0 0', fontSize: 12, color: '#90E0EF' }}>
+          <h2 className="m-0 text-[15px] font-semibold text-white/90">Products</h2>
+          <p className="m-0 mt-0.5 text-xs text-white/50">
             {displayProducts.length} {opsMode ? 'active' : 'total'}
           </p>
         </div>
@@ -42,18 +43,24 @@ const ProductList = () => {
         ) : (
           displayProducts.map((p) => (
             <Table.Row key={p._id} onClick={() => navigate(`/products/${p._id}`)}>
-              <Table.Cell><span style={{ fontWeight: 500, color: '#03045E' }}>{p.name}</span></Table.Cell>
-              <Table.Cell><span style={{ fontFamily: 'monospace', fontSize: 11, background: '#EAF6FB', padding: '2px 7px', borderRadius: 4, color: '#0077B6' }}>{p.version}</span></Table.Cell>
+              <Table.Cell><span className="font-medium text-white/90">{p.name}</span></Table.Cell>
+              <Table.Cell>
+                <span className="font-mono text-[11px] bg-white/[0.1] px-[7px] py-0.5 rounded text-[#90E0EF]">
+                  {p.version}
+                </span>
+              </Table.Cell>
               <Table.Cell>${p.salePrice?.toLocaleString()}</Table.Cell>
               <Table.Cell>${p.costPrice?.toLocaleString()}</Table.Cell>
               <Table.Cell><StatusBadge status={p.status} /></Table.Cell>
-              <Table.Cell style={{ fontSize: 12, color: '#90E0EF' }}>{p.createdBy?.name || '—'}</Table.Cell>
+              <Table.Cell><span className="text-xs text-white/50">{p.createdBy?.name || '—'}</span></Table.Cell>
               <Table.Cell>
-                {/* Operations: no action buttons at all */}
                 {!opsMode && (
-                  <div style={{ display: 'flex', gap: 6 }} onClick={(e) => e.stopPropagation()}>
+                  <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
                     {canCreateECO(role) && p.status === 'Active' && (
-                      <Button size="sm" variant="secondary" onClick={() => navigate(`/eco/new?productId=${p._id}&ecoType=Product`)}>ECO</Button>
+                      <Button size="sm" variant="secondary"
+                        onClick={() => navigate(`/eco/new?productId=${p._id}&ecoType=Product`)}>
+                        ECO
+                      </Button>
                     )}
                   </div>
                 )}

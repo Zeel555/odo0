@@ -1,5 +1,6 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSidebar } from '../../context/SidebarContext';
 import { getRoleConfig } from '../../utils/roleConfig';
 
 /* ── Role-based nav sections ────────────────────────────────── */
@@ -22,19 +23,16 @@ const getNavSections = (role) => {
         { label: 'Master Data',    items: [products, bom] },
         { label: 'Change Control', items: [eco, reports] },
       ];
-
     case 'approver':
       return [
         ...base,
         { label: 'Change Control', items: [eco, reports] },
       ];
-
     case 'operations':
       return [
         ...base,
         { label: 'Master Data', items: [products, bom] },
       ];
-
     case 'admin':
     default:
       return [
@@ -49,110 +47,136 @@ const getNavSections = (role) => {
 /* ── Sidebar ─────────────────────────────────────────────────── */
 const Sidebar = () => {
   const { currentUser, currentCompany } = useAuth();
+  const { collapsed, toggleSidebar, mobileOpen, closeMobile, setHovered, isExpanded } = useSidebar();
+  const location = useLocation();
   const role     = currentUser?.role;
   const cfg      = getRoleConfig(role);
   const initials = (currentUser?.name || 'U').charAt(0).toUpperCase();
   const sections = getNavSections(role);
 
+  const showLabels = isExpanded;
+  const sidebarWidth = isExpanded ? 'w-[220px]' : 'w-16';
+
   return (
-    <aside style={{
-      position: 'fixed', left: 0, top: 0, height: '100vh', width: '220px',
-      background: '#FFFFFF', borderRight: '1.5px solid #CAF0F8',
-      display: 'flex', flexDirection: 'column', zIndex: 30,
-    }}>
-      {/* Logo */}
-      <div style={{ padding: '18px 16px 14px', borderBottom: '1px solid #EAF6FB' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{
-            width: 30, height: 30, borderRadius: 8,
-            background: '#CAF0F8', border: '1.5px solid #90E0EF',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-          }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect x="1"   y="1"   width="4.5" height="4.5" rx="1" stroke="#0077B6" strokeWidth="1.4"/>
-              <rect x="8.5" y="1"   width="4.5" height="4.5" rx="1" stroke="#0077B6" strokeWidth="1.4"/>
-              <rect x="1"   y="8.5" width="4.5" height="4.5" rx="1" stroke="#0077B6" strokeWidth="1.4"/>
-              <rect x="8.5" y="8.5" width="4.5" height="4.5" rx="1" stroke="#0077B6" strokeWidth="1.4"/>
-            </svg>
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 14, fontWeight: 600, color: '#03045E', margin: 0, lineHeight: 1.2 }}>RevoraX</p>
-            <p style={{ fontSize: 10, color: '#90E0EF', margin: 0, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {currentCompany?.name || 'Lifecycle Manager'}
-            </p>
-          </div>
-          <div className="live-dot" style={{ width: 7, height: 7, borderRadius: '50%', background: '#00B4D8', flexShrink: 0 }} />
-        </div>
-      </div>
+    <>
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div className="sidebar-backdrop md:hidden" onClick={closeMobile} />
+      )}
 
-      {/* Nav */}
-      <nav style={{ flex: 1, overflowY: 'auto', padding: '8px 8px' }} className="custom-scrollbar">
-        {sections.map((section) => (
-          <div key={section.label} style={{ marginBottom: 4 }}>
-            <p style={{
-              fontSize: 10, fontWeight: 600, color: '#90E0EF',
-              textTransform: 'uppercase', letterSpacing: '0.08em',
-              padding: '8px 8px 2px', margin: 0,
-            }}>{section.label}</p>
-            {section.items.map(({ label, to, icon: Icon }, idx) => (
-              <NavLink
-                key={to}
-                to={to}
-                className="nav-item"
-                style={({ isActive }) => ({
-                  display: 'flex', alignItems: 'center', gap: 9,
-                  padding: '7px 10px', borderRadius: 8, textDecoration: 'none',
-                  fontSize: 13, fontWeight: isActive ? 500 : 400,
-                  color: isActive ? '#03045E' : '#0077B6',
-                  background: isActive ? '#CAF0F8' : 'transparent',
-                  transition: 'background 0.18s, color 0.18s',
-                  marginBottom: 1,
-                  animationDelay: `${(idx + 1) * 0.04}s`,
-                })}
-                onMouseEnter={(e) => {
-                  if (e.currentTarget.getAttribute('aria-current') !== 'page') {
-                    e.currentTarget.style.background = '#EAF6FB';
-                    e.currentTarget.style.color = '#03045E';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (e.currentTarget.getAttribute('aria-current') !== 'page') {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = '#0077B6';
-                  }
-                }}
+      <aside
+        onMouseEnter={() => { if (collapsed) setHovered(true); }}
+        onMouseLeave={() => setHovered(false)}
+        className={`
+          fixed left-0 top-0 h-screen
+          bg-white/[0.06] backdrop-blur-xl border-r border-white/[0.1]
+          flex flex-col z-50 sidebar-transition
+          ${sidebarWidth}
+          ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
+      >
+        {/* Logo + Pin toggle */}
+        <div className="px-3 pt-4 pb-3 border-b border-white/[0.08]">
+          <div className="flex items-center gap-2.5">
+            <div className="w-[30px] h-[30px] rounded-lg bg-white/[0.08] border border-white/[0.12]
+                            flex items-center justify-center flex-shrink-0">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <rect x="1" y="1" width="4.5" height="4.5" rx="1" stroke="#00B4D8" strokeWidth="1.4"/>
+                <rect x="8.5" y="1" width="4.5" height="4.5" rx="1" stroke="#48CAE4" strokeWidth="1.4"/>
+                <rect x="1" y="8.5" width="4.5" height="4.5" rx="1" stroke="#48CAE4" strokeWidth="1.4"/>
+                <rect x="8.5" y="8.5" width="4.5" height="4.5" rx="1" stroke="#90E0EF" strokeWidth="1.4"/>
+              </svg>
+            </div>
+            {showLabels && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-white m-0 leading-tight">RevoraX</p>
+                <p className="text-[10px] text-white/40 m-0 mt-0.5 truncate">
+                  {currentCompany?.name || 'Lifecycle Manager'}
+                </p>
+              </div>
+            )}
+            {showLabels && (
+              <button
+                onClick={toggleSidebar}
+                className="hidden md:flex w-6 h-6 items-center justify-center rounded-md
+                           hover:bg-white/[0.1] transition-colors flex-shrink-0"
+                title={collapsed ? 'Pin sidebar open' : 'Unpin sidebar'}
               >
-                {({ isActive }) => (
-                  <>
-                    <Icon color={isActive ? '#03045E' : '#0077B6'} />
-                    {label}
-                  </>
-                )}
-              </NavLink>
-            ))}
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#90E0EF" strokeWidth="1.6"
+                     strokeLinecap="round" strokeLinejoin="round">
+                  {collapsed ? (
+                    <path d="M7 2v4M4 6h6l1 3H3l1-3zM5 9v3M9 9v3"/>
+                  ) : (
+                    <path d="M9 3L5 7l4 4"/>
+                  )}
+                </svg>
+              </button>
+            )}
           </div>
-        ))}
-      </nav>
-
-      {/* Bottom user block */}
-      <div style={{ padding: '10px 12px 16px', borderTop: '1px solid #EAF6FB' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{
-            width: 28, height: 28, borderRadius: '50%',
-            background: `${cfg.accent}22`, border: `1.5px solid ${cfg.accent}44`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-          }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: cfg.accent }}>{initials}</span>
-          </div>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <p style={{ fontSize: 11.5, fontWeight: 500, color: '#03045E', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentUser?.name}</p>
-            <p style={{ fontSize: 10, margin: 0, textTransform: 'capitalize', color: cfg.accent, fontWeight: 600 }}>{cfg.label}</p>
-          </div>
-          {/* Role badge dot */}
-          <div style={{ width: 7, height: 7, borderRadius: '50%', background: cfg.accent, flexShrink: 0 }} />
         </div>
-      </div>
-    </aside>
+
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto py-2 px-2 custom-scrollbar">
+          {sections.map((section) => (
+            <div key={section.label} className="mb-1">
+              {showLabels && (
+                <p className="text-[10px] font-semibold text-white/30 uppercase tracking-wider
+                              px-2 pt-2 pb-0.5 m-0">
+                  {section.label}
+                </p>
+              )}
+              {section.items.map(({ label, to, icon: Icon }) => {
+                const isActive = location.pathname === to || location.pathname.startsWith(to + '/');
+                return (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    onClick={closeMobile}
+                    className="nav-item group"
+                    title={!showLabels ? label : undefined}
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <div className={`
+                      flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg mb-0.5
+                      transition-colors duration-150
+                      ${isActive
+                        ? 'bg-white/[0.12] text-white font-medium'
+                        : 'text-white/60 hover:bg-white/[0.07] hover:text-white/90'
+                      }
+                      ${!showLabels ? 'justify-center px-0' : ''}
+                    `}>
+                      <Icon color={isActive ? '#00B4D8' : '#90E0EF'} />
+                      {showLabels && <span className="text-[13px] whitespace-nowrap">{label}</span>}
+                    </div>
+                  </NavLink>
+                );
+              })}
+            </div>
+          ))}
+        </nav>
+
+        {/* Bottom user block */}
+        <div className="px-3 py-2.5 border-t border-white/[0.08]">
+          <div className={`flex items-center ${!showLabels ? 'justify-center' : 'gap-2'}`}>
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: `${cfg.accent}33`, border: `1.5px solid ${cfg.accent}55` }}
+            >
+              <span className="text-[10px] font-bold" style={{ color: cfg.accent }}>{initials}</span>
+            </div>
+            {showLabels && (
+              <div className="min-w-0 flex-1">
+                <p className="text-[11.5px] font-medium text-white/90 m-0 truncate">{currentUser?.name}</p>
+                <p className="text-[10px] m-0 capitalize font-semibold" style={{ color: cfg.accent }}>{cfg.label}</p>
+              </div>
+            )}
+            {showLabels && (
+              <div className="w-[7px] h-[7px] rounded-full flex-shrink-0" style={{ background: cfg.accent }} />
+            )}
+          </div>
+        </div>
+      </aside>
+    </>
   );
 };
 
@@ -199,4 +223,5 @@ function SettingsIcon({ color = 'currentColor' }) {
     <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.2 3.2l1.4 1.4M11.4 11.4l1.4 1.4M3.2 12.8l1.4-1.4M11.4 4.6l1.4-1.4"/>
   </svg>;
 }
+
 export default Sidebar;

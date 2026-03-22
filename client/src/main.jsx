@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ECOProvider } from './context/ECOContext';
+import { SidebarProvider } from './context/SidebarContext';
 import App from './App';
 import './index.css';
 
@@ -11,7 +12,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <AuthProvider>
         <ECOProvider>
-          <App />
+          <SidebarProvider>
+            <App />
+          </SidebarProvider>
         </ECOProvider>
       </AuthProvider>
     </BrowserRouter>

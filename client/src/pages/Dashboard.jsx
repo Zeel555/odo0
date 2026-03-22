@@ -1,6 +1,7 @@
 /**
  * Dashboard.jsx
  * Role-based router — renders the correct dashboard per currentUser.role.
+ * Dark theme adaptation.
  */
 import { useAuth } from '../context/AuthContext';
 import EngineeringDashboard from '../components/dashboard/EngineeringDashboard';
@@ -12,7 +13,6 @@ import { getRoleConfig }    from '../utils/roleConfig';
 const Dashboard = () => {
   const { currentUser } = useAuth();
   const role = currentUser?.role;
-  const cfg  = getRoleConfig(role);
 
   switch (role) {
     case 'engineering': return <EngineeringDashboard />;
@@ -21,16 +21,13 @@ const Dashboard = () => {
     case 'admin':       return <AdminDashboard />;
     default:
       return (
-        <div style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center',
-          justifyContent: 'center', minHeight: 300, gap: 12,
-        }}>
-          <div style={{ fontSize: 40 }}>🔐</div>
-          <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#0F172A' }}>
+        <div className="flex flex-col items-center justify-center min-h-[300px] gap-3">
+          <div className="text-[40px] drop-shadow-md">🔐</div>
+          <p className="m-0 text-[15px] font-semibold text-white/90">
             Dashboard unavailable
           </p>
-          <p style={{ margin: 0, fontSize: 13, color: '#64748B' }}>
-            Your account role (<code>{role || 'unknown'}</code>) does not have a configured dashboard.
+          <p className="m-0 text-[13px] text-white/50">
+            Your account role (<code className="bg-white/10 px-1 py-0.5 rounded text-[#90E0EF] font-mono">{role || 'unknown'}</code>) does not have a configured dashboard.
           </p>
         </div>
       );

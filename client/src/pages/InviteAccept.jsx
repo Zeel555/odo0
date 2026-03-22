@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getInvite, acceptInvite } from '../api/members';
+import AuroraBackground from '../components/ui/AuroraBackground';
 
 const InviteAccept = () => {
   const { token } = useParams();
@@ -38,119 +39,124 @@ const InviteAccept = () => {
     }
   };
 
-  if (loading) return <Center><Spinner /></Center>;
+  const inputCls = `w-full py-[11px] px-3.5 bg-white/[0.04] border border-white/[0.15] rounded-xl
+                    text-[13.5px] text-white placeholder-white/30 outline-none
+                    focus:border-[#00B4D8] focus:ring-1 focus:ring-[#00B4D8]/30
+                    transition-all box-border`;
+
+  if (loading) return (
+    <AuroraBackground>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-3 border-white/10 border-t-white/90 rounded-full animate-spin"></div>
+      </div>
+    </AuroraBackground>
+  );
 
   if (success) return (
-    <Center>
-      <div style={{ textAlign: 'center', padding: 40 }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
-        <h2 style={{ color: '#03045E', margin: '0 0 8px' }}>Account Created!</h2>
-        <p style={{ color: '#0077B6', fontSize: 14 }}>Redirecting to login in 3 seconds…</p>
+    <AuroraBackground>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center p-10 glass-card mx-4 max-w-sm rounded-[24px]">
+          <div className="text-5xl mb-4">✅</div>
+          <h2 className="text-white text-xl font-bold m-0 mb-2">Account Created!</h2>
+          <p className="text-[#90E0EF] text-sm m-0 font-medium">Redirecting to login in 3 seconds…</p>
+        </div>
       </div>
-    </Center>
+    </AuroraBackground>
   );
 
   return (
-    <div style={{
-      minHeight: '100vh', background: 'linear-gradient(135deg, #F0F9FF 0%, #EAF6FB 100%)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontFamily: "'Inter', sans-serif", padding: 24,
-    }}>
-      <div style={{ width: '100%', maxWidth: 440, background: '#fff', borderRadius: 20, boxShadow: '0 8px 40px rgba(0,119,182,0.12)', border: '1.5px solid #90E0EF', padding: '44px 36px' }}>
-        {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-          <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-            <rect width="14" height="14" rx="3" fill="#0077B6"/>
-            <rect x="18" width="14" height="14" rx="3" fill="#00B4D8"/>
-            <rect y="18" width="14" height="14" rx="3" fill="#48CAE4"/>
-            <rect x="18" y="18" width="14" height="14" rx="3" fill="#90E0EF"/>
-          </svg>
-          <span style={{ fontWeight: 700, fontSize: 16, color: '#03045E' }}>RevoraX</span>
-        </div>
-
-        {error && !invite ? (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
-            <h2 style={{ color: '#03045E', margin: '0 0 8px' }}>Invite Invalid</h2>
-            <p style={{ color: '#A32D2D', fontSize: 13 }}>{error}</p>
-            <a href="/" style={{ color: '#0077B6', fontSize: 13 }}>← Back to login</a>
+    <AuroraBackground>
+      <div className="min-h-screen w-full flex items-center justify-center px-4 py-10 sm:py-12">
+      <div className="w-full max-w-[440px] relative z-10">
+        
+        {/* Card */}
+        <div className="bg-white/10 backdrop-blur-2xl border border-white/20
+                        rounded-3xl p-9 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
+          
+          {/* Logo */}
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-white/[0.04] border-[1.5px] border-white/[0.1]
+                            flex items-center justify-center backdrop-blur-md shadow-sm">
+              <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
+                <rect width="14" height="14" rx="3" fill="#00B4D8"/>
+                <rect x="18" width="14" height="14" rx="3" fill="#00B4D8"/>
+                <rect y="18" width="14" height="14" rx="3" fill="#00B4D8"/>
+                <rect x="18" y="18" width="14" height="14" rx="3" fill="#00B4D8"/>
+              </svg>
+            </div>
+            <span className="font-bold text-[18px] text-white tracking-tight">RevoraX</span>
           </div>
-        ) : (
-          <>
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ display: 'inline-block', background: '#EAF6FB', border: '1px solid #90E0EF', borderRadius: 8, padding: '6px 12px', fontSize: 12, color: '#0077B6', marginBottom: 12, fontWeight: 600 }}>
-                {invite?.companyName}
-              </div>
-              <h1 style={{ margin: '0 0 6px', fontSize: 20, fontWeight: 700, color: '#03045E' }}>You're invited! 🎉</h1>
-              <p style={{ margin: 0, fontSize: 13, color: '#90E0EF' }}>Set a password to complete your account.</p>
+
+          {error && !invite ? (
+            <div className="text-center">
+              <div className="text-5xl mb-3">⚠️</div>
+              <h2 className="text-white text-xl font-bold m-0 mb-2">Invite Invalid</h2>
+              <p className="text-red-300 text-[13.5px] font-medium m-0 mb-4">{error}</p>
+              <a href="/" className="text-[#00B4D8] hover:text-[#90E0EF] text-sm font-semibold no-underline transition-colors">← Back to login</a>
             </div>
-
-            {/* Pre-filled details */}
-            <div style={{ background: '#EAF6FB', borderRadius: 10, padding: '14px 16px', marginBottom: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 12 }}>
-              <Detail label="Name" value={invite?.name} />
-              <Detail label="Email" value={invite?.email} />
-              <Detail label="Role" value={invite?.role} />
-              <Detail label="Company" value={invite?.companyName} />
-            </div>
-
-            {error && (
-              <div style={{ background: '#FCEBEB', border: '1px solid #F28B82', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#A32D2D', marginBottom: 14 }}>
-                {error}
+          ) : (
+            <>
+              <div className="mb-8">
+                <div className="inline-block bg-[#00B4D8]/10 border border-[#00B4D8]/30 rounded-lg px-3 py-1.5 
+                                text-xs text-[#90E0EF] mb-4 font-bold tracking-wide">
+                  {invite?.companyName}
+                </div>
+                <h1 className="m-0 mb-2 text-[22px] font-bold text-white tracking-tight">You're invited! 🎉</h1>
+                <p className="m-0 text-[13.5px] text-white/50 font-medium tracking-wide">Set a password to complete your account.</p>
               </div>
-            )}
 
-            <form onSubmit={handleAccept} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <Field label="Set Password">
-                <input type="password" required value={password} onChange={e => setPassword(e.target.value)}
-                  placeholder="min 6 characters" style={inputStyle} />
-              </Field>
-              <Field label="Confirm Password">
-                <input type="password" required value={confirm} onChange={e => setConfirm(e.target.value)}
-                  placeholder="repeat password" style={inputStyle} />
-              </Field>
-              <button type="submit" disabled={saving} style={{
-                marginTop: 6, padding: '13px', background: saving ? '#90E0EF' : '#0077B6',
-                color: '#fff', border: 'none', borderRadius: 10, fontWeight: 600, fontSize: 14,
-                cursor: saving ? 'not-allowed' : 'pointer',
-              }}>
-                {saving ? 'Creating account…' : 'Create Account & Join →'}
-              </button>
-            </form>
-          </>
-        )}
+              {/* Pre-filled details */}
+              <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-5 mb-6 
+                              grid grid-cols-2 gap-y-4 gap-x-3 text-xs shadow-inner">
+                <Detail label="Name" value={invite?.name} />
+                <Detail label="Email" value={invite?.email} />
+                <Detail label="Role" value={invite?.role} />
+                <Detail label="Company" value={invite?.companyName} />
+              </div>
+
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-[13px] text-red-300 font-medium mb-5">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleAccept} className="flex flex-col gap-4">
+                <Field label="Set Password">
+                  <input type="password" required value={password} onChange={e => setPassword(e.target.value)}
+                    placeholder="min 6 characters" className={inputCls} />
+                </Field>
+                <Field label="Confirm Password">
+                  <input type="password" required value={confirm} onChange={e => setConfirm(e.target.value)}
+                    placeholder="repeat password" className={inputCls} />
+                </Field>
+                <button type="submit" disabled={saving} 
+                  className={`mt-3 py-3.5 border-none rounded-xl font-semibold text-[14px]
+                              cursor-pointer transition-all duration-300 text-white shadow-lg
+                              ${saving ? 'bg-white/10 text-white/50 cursor-not-allowed' : 'bg-[#00B4D8] hover:bg-[#0096B4] hover:shadow-[#00B4D8]/20'}
+                            `}>
+                  {saving ? 'Creating account…' : 'Create Account & Join →'}
+                </button>
+              </form>
+            </>
+          )}
+        </div>
       </div>
-    </div>
+      </div>
+    </AuroraBackground>
   );
-};
-
-const inputStyle = {
-  width: '100%', padding: '10px 13px', border: '1.5px solid #90E0EF', borderRadius: 8,
-  fontSize: 13, outline: 'none', boxSizing: 'border-box', background: '#FAFEFF',
 };
 
 const Field = ({ label, children }) => (
   <div>
-    <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#0077B6', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</label>
+    <label className="block text-[11px] font-semibold text-white/50 mb-1.5 uppercase tracking-wider">{label}</label>
     {children}
   </div>
 );
 
 const Detail = ({ label, value }) => (
   <div>
-    <p style={{ margin: '0 0 2px', fontSize: 10, fontWeight: 600, color: '#90E0EF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
-    <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: '#03045E', textTransform: 'capitalize' }}>{value || '—'}</p>
-  </div>
-);
-
-const Center = ({ children }) => (
-  <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F0F9FF' }}>
-    {children}
-  </div>
-);
-
-const Spinner = () => (
-  <div style={{ width: 28, height: 28, border: '3px solid #CAF0F8', borderTopColor: '#0077B6', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }}>
-    <style>{`@keyframes spin { to { transform: rotate(360deg); }}`}</style>
+    <p className="m-0 mb-1 text-[10px] font-semibold text-white/40 uppercase tracking-wider">{label}</p>
+    <p className="m-0 text-[13px] font-medium text-white/90 capitalize">{value || '—'}</p>
   </div>
 );
 

@@ -4,8 +4,7 @@ import Button from '../common/Button';
 import { useProducts } from '../../hooks/useProducts';
 
 /**
- * ProductForm — used for both Create and Edit.
- * If `id` param exists, loads product and pre-fills the form.
+ * ProductForm — glassmorphism dark theme adaptation.
  */
 const ProductForm = () => {
   const { id } = useParams();
@@ -65,65 +64,68 @@ const ProductForm = () => {
     }
   };
 
+  const inputClass = "w-full border border-white/[0.15] bg-white/[0.04] text-white placeholder-white/30 rounded-lg px-3 py-2.5 text-[13px] focus:outline-none focus:border-[#00B4D8] focus:ring-1 focus:ring-[#00B4D8]/30 transition-all";
+  const labelClass = "block text-[11px] font-semibold text-[#90E0EF]/80 mb-1.5 uppercase tracking-wider";
+
   return (
     <div className="max-w-xl">
       <div className="flex items-center gap-4 mb-6">
-        <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-gray-600 text-lg">←</button>
-        <h2 className="text-lg font-semibold text-gray-900">{isEdit ? 'Edit Product' : 'New Product'}</h2>
+        <button onClick={() => navigate(-1)} className="bg-transparent border-none cursor-pointer text-lg text-white/50 hover:text-white transition-colors">←</button>
+        <h2 className="m-0 text-base font-semibold text-white/90">{isEdit ? 'Edit Product' : 'New Product'}</h2>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="glass-card p-6 border-white/[0.2] bg-white/[0.04]">
         <form onSubmit={handleSubmit} className="space-y-5">
-          {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+          {error && <p className="text-[13px] text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg m-0">{error}</p>}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
+            <label className={labelClass}>Product Name *</label>
             <input
               name="name" value={form.name} onChange={handleChange} required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={inputClass}
               placeholder="e.g. iPhone 17"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Sale Price *</label>
+              <label className={labelClass}>Sale Price *</label>
               <input
                 type="number" name="salePrice" value={form.salePrice} onChange={handleChange}
                 required min="0" step="0.01"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className={inputClass}
                 placeholder="999.00"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Cost Price *</label>
+              <label className={labelClass}>Cost Price *</label>
               <input
                 type="number" name="costPrice" value={form.costPrice} onChange={handleChange}
                 required min="0" step="0.01"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className={inputClass}
                 placeholder="500.00"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Attachments</label>
+            <label className={labelClass}>Attachments</label>
             <input
               name="attachments" value={form.attachments} onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={inputClass}
               placeholder="file1.pdf, spec.docx (comma-separated)"
             />
-            <p className="text-xs text-gray-400 mt-1">Comma-separated list of file names or URLs</p>
+            <p className="m-0 text-[11px] text-white/40 mt-1.5">Comma-separated list of file names or URLs</p>
           </div>
 
           {isEdit && (
             <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Version</label>
-              <p className="text-sm text-gray-400">Auto-managed by ECO. Cannot be changed manually.</p>
+              <label className={labelClass}>Version</label>
+              <p className="m-0 text-[13px] text-white/40">Auto-managed by ECO. Cannot be changed manually.</p>
             </div>
           )}
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-4 border-t border-white/[0.08]">
             <Button type="submit" loading={saving}>{isEdit ? 'Save Changes' : 'Create Product'}</Button>
             <Button type="button" variant="secondary" onClick={() => navigate(-1)}>Cancel</Button>
           </div>
