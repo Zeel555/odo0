@@ -1,5 +1,13 @@
 const nodemailer = require('nodemailer');
 
+/**
+ * Optional: Resend (HTTPS API — works reliably on Render/Vercel backends; no SMTP firewall issues).
+ * https://resend.com — create API key, verify a sending domain (or use onboarding@resend.dev for tests).
+ */
+function isResendConfigured() {
+  return !!(process.env.RESEND_API_KEY && String(process.env.RESEND_API_KEY).trim());
+}
+
 /** Gmail App Password (recommended): only GMAIL_USER + GMAIL_APP_PASSWORD — no host/port needed. */
 function isGmailConfigured() {
   const pass =
@@ -19,10 +27,10 @@ function isSmtpConfigured() {
 }
 
 /**
- * True when we can send mail (Gmail app password OR full SMTP).
+ * True when we can send mail (Resend, Gmail app password, or full SMTP).
  */
 function isMailConfigured() {
-  return isGmailConfigured() || isSmtpConfigured();
+  return isResendConfigured() || isGmailConfigured() || isSmtpConfigured();
 }
 
 function getGmailAppPassword() {
@@ -31,15 +39,28 @@ function getGmailAppPassword() {
   return raw.replace(/\s/g, '');
 }
 
+/** Nodemailer timeouts + IPv4 — fixes "Connection timeout" on many cloud hosts (Render, Railway, etc.). */
+const SMTP_POOL_OPTIONS = {
+  connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT_MS || 60000),
+  greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT_MS || 30000),
+  socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT_MS || 60000),
+  /** Prefer IPv4 — some regions hang on IPv6 to smtp.gmail.com */
+  family: 4,
+};
+
 function getTransporter() {
-  // 1) Gmail + App Password — uses Nodemailer's built-in Gmail transport (no SMTP_* in .env)
+  // 1) Gmail + App Password — explicit host/port (more reliable than service:'gmail' on PaaS)
   if (isGmailConfigured()) {
     return nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
         user: process.env.GMAIL_USER.trim(),
         pass: getGmailAppPassword(),
       },
+      ...SMTP_POOL_OPTIONS,
+      tls: { servername: 'smtp.gmail.com' },
     });
   }
 
@@ -56,10 +77,52 @@ function getTransporter() {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      ...SMTP_POOL_OPTIONS,
     });
   }
 
   return null;
+}
+
+function getResendFrom() {
+  const name = (process.env.MAIL_FROM_NAME || 'RevoraX').replace(/"/g, '');
+  const addr =
+    process.env.MAIL_FROM ||
+    process.env.RESEND_FROM_EMAIL ||
+    'onboarding@resend.dev';
+  return `${name} <${addr}>`;
+}
+
+/**
+ * @param {{ to: string, subject: string, html?: string, text?: string }} opts
+ */
+async function sendViaResend({ to, subject, html, text }) {
+  const key = process.env.RESEND_API_KEY.trim();
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: getResendFrom(),
+      to: Array.isArray(to) ? to : [to],
+      subject,
+      html: html || undefined,
+      text: text || undefined,
+    }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg =
+      data.message ||
+      (typeof data === 'object' && data.error?.message) ||
+      JSON.stringify(data) ||
+      res.statusText;
+    throw new Error(msg);
+  }
+  return data;
 }
 
 function formatRole(role) {
@@ -191,6 +254,16 @@ function buildInviteEmailText({
   ].join('\n');
 }
 
+function nodemailerFromHeader() {
+  const fromName = process.env.MAIL_FROM_NAME || 'RevoraX';
+  const fromAddr =
+    process.env.MAIL_FROM ||
+    process.env.GMAIL_USER ||
+    process.env.SMTP_USER;
+  const from = `"${fromName.replace(/"/g, '')}" <${fromAddr}>`;
+  return from;
+}
+
 /**
  * Sends team invite email. Returns { sent: boolean, error?: string }.
  * When SMTP is not configured, returns { sent: false, error: '...' } without throwing.
@@ -203,43 +276,54 @@ async function sendInviteEmail({
   inviteUrl,
   expiresInHours = 24,
 }) {
+  const subject = `${companyName ? `${companyName} · ` : ''}You're invited to RevoraX`;
+  const text = buildInviteEmailText({
+    recipientName,
+    companyName,
+    role,
+    inviteUrl,
+    expiresInHours,
+  });
+  const html = buildInviteEmailHtml({
+    recipientName,
+    companyName,
+    role,
+    inviteUrl,
+    expiresInHours,
+  });
+
+  if (isResendConfigured()) {
+    try {
+      await sendViaResend({ to, subject, text, html });
+      return { sent: true };
+    } catch (err) {
+      console.error('[mail] sendInviteEmail (Resend) failed:', err.message);
+      return {
+        sent: false,
+        error:
+          'Email could not be sent (Resend). Check RESEND_API_KEY and verified sender domain, or copy the invite link from the UI.',
+      };
+    }
+  }
+
   const transporter = getTransporter();
   if (!transporter) {
     return {
       sent: false,
       error:
-        'Email not configured. Add GMAIL_USER + GMAIL_APP_PASSWORD (Gmail) or SMTP_HOST + SMTP_USER + SMTP_PASS in server .env.',
+        'Email not configured. Add RESEND_API_KEY (recommended for Render) or GMAIL_USER + GMAIL_APP_PASSWORD or SMTP_* in server env.',
     };
   }
 
-  const fromName = process.env.MAIL_FROM_NAME || 'RevoraX';
-  const fromAddr =
-    process.env.MAIL_FROM ||
-    process.env.GMAIL_USER ||
-    process.env.SMTP_USER;
-  const from = `"${fromName.replace(/"/g, '')}" <${fromAddr}>`;
-
-  const subject = `${companyName ? `${companyName} · ` : ''}You're invited to RevoraX`;
+  const from = nodemailerFromHeader();
 
   try {
     await transporter.sendMail({
       from,
       to,
       subject,
-      text: buildInviteEmailText({
-        recipientName,
-        companyName,
-        role,
-        inviteUrl,
-        expiresInHours,
-      }),
-      html: buildInviteEmailHtml({
-        recipientName,
-        companyName,
-        role,
-        inviteUrl,
-        expiresInHours,
-      }),
+      text,
+      html,
     });
     return { sent: true };
   } catch (err) {
@@ -247,7 +331,7 @@ async function sendInviteEmail({
     return {
       sent: false,
       error:
-        'Email could not be sent. Copy the invite link below or check GMAIL_APP_PASSWORD / mail settings on the server.',
+        'Email could not be sent. On cloud hosts, use Resend (RESEND_API_KEY) or verify SMTP reaches the internet. Copy the invite link below or check mail env vars.',
     };
   }
 }
@@ -256,16 +340,26 @@ async function sendInviteEmail({
  * Simple transactional email (ECO notifications, etc.)
  */
 async function sendPlainEmail({ to, subject, text, html }) {
+  if (isResendConfigured()) {
+    try {
+      await sendViaResend({
+        to,
+        subject,
+        text: text || '',
+        html: html || text || '',
+      });
+      return { sent: true };
+    } catch (err) {
+      console.error('[mail] sendPlainEmail (Resend) failed:', err.message);
+      return { sent: false };
+    }
+  }
+
   const transporter = getTransporter();
   if (!transporter) {
     return { sent: false };
   }
-  const fromName = process.env.MAIL_FROM_NAME || 'RevoraX';
-  const fromAddr =
-    process.env.MAIL_FROM ||
-    process.env.GMAIL_USER ||
-    process.env.SMTP_USER;
-  const from = `"${fromName.replace(/"/g, '')}" <${fromAddr}>`;
+  const from = nodemailerFromHeader();
   try {
     await transporter.sendMail({
       from,
